@@ -1,10 +1,13 @@
-# Backend
+# Backend Main
+# Import other files
+from strategies import apply_sma_strategy
+
 # Import libraries
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import yfinance as yf
 import pandas as pd
-
+import numpy as np
 app = FastAPI()
 
 # Allow React to talk to this API
@@ -42,4 +45,37 @@ def get_asset_data(ticker: str):
     available_columns = [col for col in required_columns if col in df.columns]
     
     result = df[available_columns].to_dict(orient='records')
+    return result
+
+# Endpoint for the SMAC Strategy
+@app.get("/api/backtest/sma/{ticker}")
+def backtest_sma(ticker: str, short_window: int = 20, long_window: int = 50):
+    # 1. Fetch Data
+    df = yf.download(ticker, period="2y")
+    
+    if df is None or df.empty:
+        raise HTTPException(status_code=404, detail="No data found")
+
+    # Fix MultiIndex (The code you added earlier)
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
+    
+    # 2. Apply Strategy
+    processed_data = apply_sma_strategy(df, short_window, long_window)
+    
+    # 3. Format for Frontend (Recharts needs a list of dicts)
+    # We only send what we need to minimize bandwidth
+    processed_data.reset_index(inplace=True)
+    processed_data['Date'] = processed_data['Date'].dt.strftime('%Y-%m-%d') # Format date string
+    processed_data.replace([np.inf, -np.inf], 0, inplace=True)
+    # Handle NaN values (JSON cannot handle NaN)
+    processed_data.fillna(0, inplace=True)
+    
+    result = processed_data[[
+        'Date', 
+        'Cumulative_Market', 
+        'Cumulative_Strategy', 
+        'Signal'
+    ]].to_dict(orient='records')
+    
     return result
