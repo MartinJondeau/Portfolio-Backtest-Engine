@@ -10,6 +10,55 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 from typing import List, Dict, Optional
+from pydantic import BaseModel
+import time
+
+# Pydantic models for request bodies
+class PortfolioRequest(BaseModel):
+    tickers: List[str]
+    period: str = "1y"
+
+class PortfolioBacktestRequest(BaseModel):
+    tickers: List[str]
+    weights: Optional[Dict[str, float]] = None
+    rebalance_frequency: str = "never"
+    period: str = "2y"
+
+def download_with_retry(ticker: str, period: str, max_retries: int = 3):
+    """
+    Download ticker data with retry mechanism and custom headers
+    """
+    import requests
+    
+    for attempt in range(max_retries):
+        try:
+            # Create a Ticker object
+            stock = yf.Ticker(ticker)
+            
+            # Create a session with custom headers if it doesn't exist
+            if stock.session is None:
+                stock.session = requests.Session()
+            
+            stock.session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            })
+            
+            # Download data
+            df = stock.history(period=period)
+            
+            if not df.empty:
+                return df
+            
+            time.sleep(1)  # Wait before retry
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed for {ticker}: {e}")
+            if attempt < max_retries - 1:
+                time.sleep(2)
+            continue
+    
+    return pd.DataFrame()  # Return empty DataFrame if all attempts fail
+
+
 
 app = FastAPI()
 
@@ -30,7 +79,7 @@ def read_root():
 @app.get("/api/asset/{ticker}")
 def get_asset_data(ticker: str):
     # Fetch 1 year of data
-    df = yf.download(ticker, period="1y")
+    df = download_with_retry(ticker, period="1y")
     
     # Check ticker
     if df is None or df.empty:
@@ -54,7 +103,7 @@ def get_asset_data(ticker: str):
 @app.get("/api/backtest/sma/{ticker}")
 def backtest_sma(ticker: str, short_window: int = 20, long_window: int = 50):
     # 1. Fetch Data
-    df = yf.download(ticker, period="2y")
+    df = download_with_retry(ticker, period="2y")
     
     if df is None or df.empty:
         raise HTTPException(status_code=404, detail="No data found")
@@ -93,7 +142,9 @@ def backtest_sma(ticker: str, short_window: int = 20, long_window: int = 50):
 # ========================================
 
 @app.post("/api/portfolio/data")
-def get_portfolio_data(tickers: List[str], period: str = "1y"):
+def get_portfolio_data(request: PortfolioRequest):
+    tickers = request.tickers
+    period = request.period
     """
     Fetch data for multiple assets
     Args:
@@ -107,7 +158,7 @@ def get_portfolio_data(tickers: List[str], period: str = "1y"):
     
     for ticker in tickers:
         try:
-            df = yf.download(ticker, period=period, progress=False)
+            df = download_with_retry(ticker, period)
             
             if df.empty:
                 continue
@@ -136,7 +187,9 @@ def get_portfolio_data(tickers: List[str], period: str = "1y"):
 
 
 @app.post("/api/portfolio/correlation")
-def get_correlation_matrix(tickers: List[str], period: str = "1y"):
+def get_correlation_matrix(request: PortfolioRequest):
+    tickers = request.tickers
+    period = request.period
     """
     Calculate correlation matrix between assets
     """
@@ -147,7 +200,7 @@ def get_correlation_matrix(tickers: List[str], period: str = "1y"):
     assets_data = {}
     for ticker in tickers:
         try:
-            df = yf.download(ticker, period=period, progress=False)
+            df = download_with_retry(ticker, period)
             if df.empty:
                 continue
             if isinstance(df.columns, pd.MultiIndex):
@@ -177,12 +230,11 @@ def get_correlation_matrix(tickers: List[str], period: str = "1y"):
 
 
 @app.post("/api/portfolio/backtest")
-def backtest_portfolio(
-    tickers: List[str],
-    weights: Optional[Dict[str, float]] = None,
-    rebalance_frequency: str = "never",
-    period: str = "2y"
-):
+def backtest_portfolio(request: PortfolioBacktestRequest):
+    tickers = request.tickers
+    weights = request.weights
+    rebalance_frequency = request.rebalance_frequency
+    period = request.period
     """
     Backtest portfolio with given weights and rebalancing strategy
     """
@@ -193,7 +245,7 @@ def backtest_portfolio(
     assets_data = {}
     for ticker in tickers:
         try:
-            df = yf.download(ticker, period=period, progress=False)
+            df = download_with_retry(ticker, period)
             if df.empty:
                 continue
             if isinstance(df.columns, pd.MultiIndex):
