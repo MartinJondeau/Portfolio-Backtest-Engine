@@ -38,3 +38,39 @@ def apply_sma_strategy(df, short_window=20, long_window=50):
     data['Cumulative_Strategy'] = (1 + data['Strategy_Return'].fillna(0)).cumprod()
     
     return data
+
+def calculate_performance_metrics(series):
+    """
+    Computes key financial metrics for a series of DAILY returns.
+    Input: pandas Series (Daily Returns)
+    Output: Dictionary of metrics
+    """
+    # 1. Total Return
+    # We reconstruct the cumulative path to get the final total return
+    cumulative = (1 + series).cumprod()
+    total_return = cumulative.iloc[-1] - 1
+    
+    # 2. Annualized Volatility
+    # Standard deviation of daily returns * sqrt(252 trading days)
+    volatility = series.std() * np.sqrt(252)
+    
+    # 3. Sharpe Ratio (Assuming Risk-Free Rate = 0 for simplicity)
+    # (Mean Daily Return / Std Daily Return) * sqrt(252)
+    if volatility == 0:
+        sharpe = 0
+    else:
+        sharpe = (series.mean() / series.std()) * np.sqrt(252)
+        
+    # 4. Max Drawdown
+    # Calculate the running maximum
+    running_max = cumulative.cummax()
+    # Calculate drawdown relative to running max
+    drawdown = (cumulative - running_max) / running_max
+    max_drawdown = drawdown.min()
+    
+    return {
+        "Total Return": f"{total_return * 100:.2f}%",
+        "Volatility": f"{volatility * 100:.2f}%",
+        "Sharpe Ratio": f"{sharpe:.2f}",
+        "Max Drawdown": f"{max_drawdown * 100:.2f}%"
+    }

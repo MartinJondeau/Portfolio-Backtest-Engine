@@ -1,6 +1,6 @@
 # Backend Main
 # Import other files
-from strategies import apply_sma_strategy
+from strategies import apply_sma_strategy, calculate_performance_metrics
 
 # Import libraries
 from fastapi import FastAPI, HTTPException
@@ -62,11 +62,11 @@ def backtest_sma(ticker: str, short_window: int = 20, long_window: int = 50):
     
     # 2. Apply Strategy
     processed_data = apply_sma_strategy(df, short_window, long_window)
-    
+    metrics = calculate_performance_metrics(processed_data['Strategy_Return'])
     # 3. Format for Frontend (Recharts needs a list of dicts)
     # We only send what we need to minimize bandwidth
     processed_data.reset_index(inplace=True)
-    processed_data['Date'] = processed_data['Date'].dt.strftime('%Y-%m-%d') # Format date string
+    processed_data['Date'] = pd.to_datetime(processed_data['Date']).dt.strftime('%Y-%m-%d')
     processed_data.replace([np.inf, -np.inf], 0, inplace=True)
     # Handle NaN values (JSON cannot handle NaN)
     processed_data.fillna(0, inplace=True)
@@ -78,4 +78,7 @@ def backtest_sma(ticker: str, short_window: int = 20, long_window: int = 50):
         'Signal'
     ]].to_dict(orient='records')
     
-    return result
+    return {
+        "metrics": metrics,
+        "data": result
+    }
