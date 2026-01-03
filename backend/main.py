@@ -91,33 +91,62 @@ def get_realtime_asset(ticker: str):
         raise HTTPException(status_code=404, detail="Ticker not found")
 # Endpoint for the SMAC Strategy
 @app.get("/api/backtest/sma/{ticker}")
-def backtest_sma(ticker: str, short_window: int = 20, long_window: int = 50):
-    # 1. Fetch Data
-    df = yf.download(ticker, period="2y")
+def backtest_sma(
+    ticker: str, 
+    short_window: int = 20, 
+    long_window: int = 50,
+    period: str = "1y",       # <--- NEW
+    timeframe: str = "daily"  # <--- NEW
+):
+    # --- 1. VALIDATION LAYER (Safety Checks) ---
+    # Define allowed values
+    valid_periods = ["1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "max"]
+    timeframe_mapping = {
+        "daily": "1d",
+        "weekly": "1wk", 
+        "monthly": "1mo"
+    }
+    
+    # Check 1: Is the period valid?
+    if period not in valid_periods:
+        raise HTTPException(status_code=400, detail=f"Invalid period. Allowed: {valid_periods}")
+
+    # Check 2: Is the timeframe valid?
+    if timeframe not in timeframe_mapping:
+        raise HTTPException(status_code=400, detail="Invalid timeframe. Use: daily, weekly, monthly")
+
+    # Check 3: Logical Math Error (Short > Long)
+    if short_window >= long_window:
+        raise HTTPException(status_code=400, detail="Short window must be less than Long window")
+
+    # --- 2. FETCH DATA ---
+    # Use the mapped interval (e.g., "daily" -> "1d")
+    df = yf.download(ticker, period=period, interval=timeframe_mapping[timeframe])
     
     if df is None or df.empty:
-        raise HTTPException(status_code=404, detail="No data found")
+        raise HTTPException(status_code=404, detail="No data found for this configuration")
 
-    # Fix MultiIndex (The code you added earlier)
+    # Fix MultiIndex if necessary
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.get_level_values(0)
-    
-    # 2. Apply Strategy
+
+    # --- 3. APPLY STRATEGY ---
+    # (The strategy logic remains the same, it adapts to the DF length)
     processed_data = apply_sma_strategy(df, short_window, long_window)
+    
+    # Calculate Metrics
     metrics = calculate_performance_metrics(processed_data['Strategy_Return'])
-    # 3. Format for Frontend (Recharts needs a list of dicts)
-    # We only send what we need to minimize bandwidth
+
+    # --- 4. FORMAT RESPONSE ---
     processed_data.reset_index(inplace=True)
+    # Handle different date formats (Weekly/Monthly might look different)
     processed_data['Date'] = pd.to_datetime(processed_data['Date']).dt.strftime('%Y-%m-%d')
+    
     processed_data.replace([np.inf, -np.inf], 0, inplace=True)
-    # Handle NaN values (JSON cannot handle NaN)
     processed_data.fillna(0, inplace=True)
     
     result = processed_data[[
-        'Date', 
-        'Cumulative_Market', 
-        'Cumulative_Strategy', 
-        'Signal'
+        'Date', 'Cumulative_Market', 'Cumulative_Strategy', 'Signal'
     ]].to_dict(orient='records')
     
     return {

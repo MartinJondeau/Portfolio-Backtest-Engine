@@ -14,14 +14,22 @@ function App() {
   
   // NEW: Tab State ('strategy' or 'asset')
   const [activeTab, setActiveTab] = useState('strategy')
-
+  const [period, setPeriod] = useState('1y');     
+  const [timeframe, setTimeframe] = useState('daily'); 
   const fetchData = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8001/api/backtest/sma/${ticker}?short_window=${shortWindow}&long_window=${longWindow}`)      
-      setData(response.data.data)      
+      // Updated URL with new parameters
+      const response = await axios.get(`http://127.0.0.1:8001/api/backtest/sma/${ticker}?short_window=${shortWindow}&long_window=${longWindow}&period=${period}&timeframe=${timeframe}`)
+
+      setData(response.data.data)
       setMetrics(response.data.metrics)
     } catch (error) {
-      console.error("Error fetching data:", error)
+      // NEW: Better error handling for our validation messages
+      if (error.response && error.response.status === 400) {
+          alert(error.response.data.detail); // Show the specific Python error
+      } else {
+          console.error("Error fetching data:", error);
+      }
     }
   }
 
@@ -60,6 +68,35 @@ function App() {
             onChange={(e) => setLongWindow(e.target.value)} 
             style={{ width: '50px', padding: '8px', borderRadius: '4px', border: 'none' }}
           />
+        </div>
+        {/* NEW: Period Selector */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ fontSize: '10px', color: '#ccc' }}>Period</label>
+            <select 
+                value={period} 
+                onChange={(e) => setPeriod(e.target.value)}
+                style={{ padding: '8px', borderRadius: '4px', border: 'none' }}
+            >
+                <option value="1mo">1 Month</option>
+                <option value="6mo">6 Months</option>
+                <option value="1y">1 Year</option>
+                <option value="2y">2 Years</option>
+                <option value="5y">5 Years</option>
+            </select>
+        </div>
+
+        {/* NEW: Timeframe Selector */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ fontSize: '10px', color: '#ccc' }}>Timeframe</label>
+            <select 
+                value={timeframe} 
+                onChange={(e) => setTimeframe(e.target.value)}
+                style={{ padding: '8px', borderRadius: '4px', border: 'none' }}
+            >
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+            </select>
         </div>
         <button onClick={fetchData} style={{ marginLeft: 'auto', background: '#2196F3', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '4px', cursor: 'pointer' }}>
           Run Backtest
