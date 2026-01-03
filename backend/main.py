@@ -1,7 +1,7 @@
 # Backend Main
 # Import other files
 from strategies import apply_sma_strategy, calculate_performance_metrics
-
+import time
 # Import libraries
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,7 +22,8 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"status": "API is running"}
-
+quote_cache = {}
+CACHE_DURATION = 60
 # Endpoint for Single Asset Data
 @app.get("/api/asset/{ticker}")
 def get_asset_data(ticker: str):
@@ -47,24 +48,45 @@ def get_asset_data(ticker: str):
     result = df[available_columns].to_dict(orient='records')
     return result
 
-@app.get("/api/quote/{ticker}")
-def get_quote(ticker: str):
+@app.get("/api/asset/{ticker}/realtime")
+def get_realtime_asset(ticker: str):
+    ticker = ticker.upper()
+    current_time = time.time()
+    
+    # 1. Check Cache
+    if ticker in quote_cache:
+        cached_item = quote_cache[ticker]
+        if current_time < cached_item['expiry']:
+            print(f"⚡ Serving {ticker} from Cache")
+            return cached_item['data']
+
+    # 2. Fetch Fresh Data (if cache missing or expired)
     try:
-        # Fetch just 1 day of data to get the latest close
+        print(f"Fetching {ticker} from API...")
         stock = yf.Ticker(ticker)
-        # fast_info is often faster than history() for current price
         price = stock.fast_info['last_price']
         prev_close = stock.fast_info['previous_close']
         
         change = price - prev_close
         pct_change = (change / prev_close) * 100
         
-        return {
-            "symbol": ticker.upper(),
+        # 3. Build Response Object with Timestamp
+        data = {
+            "symbol": ticker,
             "price": round(price, 2),
             "change": round(change, 2),
-            "pct_change": round(pct_change, 2)
+            "pct_change": round(pct_change, 2),
+            "last_updated": time.strftime('%H:%M:%S', time.localtime(current_time)) # <--- Timestamp Requirement
         }
+        
+        # 4. Save to Cache
+        quote_cache[ticker] = {
+            "data": data,
+            "expiry": current_time + CACHE_DURATION
+        }
+        
+        return data
+
     except Exception as e:
         raise HTTPException(status_code=404, detail="Ticker not found")
 # Endpoint for the SMAC Strategy
