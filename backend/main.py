@@ -164,7 +164,37 @@ def get_realtime_asset(ticker: str):
     except Exception as e:
         logger.error(f"Realtime fetch failed: {e}")
         raise HTTPException(status_code=503, detail="Network Error: External API Unavailable")
+    
+@app.get("/api/asset/{ticker}")
+def get_asset_details(ticker: str, period: str = "1y"): # <--- Add period parameter
+    ticker = ticker.upper()
+    try:
+        stock = yf.Ticker(ticker)
+        # Use the period requested by frontend
+        history = stock.history(period=period)
+        
+        if history.empty:
+             raise HTTPException(status_code=404, detail="Ticker not found or no data")
+        
+        history.reset_index(inplace=True)
+        
+        data = []
+        for index, row in history.iterrows():
+            data.append({
+                "Date": row['Date'].strftime('%Y-%m-%d'),
+                "Close": round(row['Close'], 2),
+                "Open": round(row['Open'], 2),
+                "High": round(row['High'], 2),
+                "Low": round(row['Low'], 2),
+                "Volume": row['Volume']
+            })
+            
+        return data
 
+    except Exception as e:
+        print(f"Error fetching asset data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
 # --- Strategy: SMA Crossover ---
 @app.get("/api/backtest/sma/{ticker}")
 def backtest_sma(
@@ -382,7 +412,7 @@ def get_latest_report():
         
     list_of_files = glob.glob(f'{reports_dir}/*.json') 
     if not list_of_files:
-        raise HTTPException(status_code=404, detail="No reports found. Run daily_report.py first.")
+        raise HTTPException(status_code=404, detail="No reports found. Run report.py first.")
         
     latest_file = max(list_of_files, key=os.path.getctime)
     
