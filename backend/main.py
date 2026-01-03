@@ -1,57 +1,133 @@
-# Backend Main
-# Import other files
-from strategies import apply_sma_strategy, apply_mean_reversion_strategy, calculate_performance_metrics
+import logging
 import time
+import random
+import json
+import os
+import glob
+from datetime import datetime
 
-# Import libraries
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+# Third-party libraries
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import yfinance as yf
 import pandas as pd
 import numpy as np
+
+# Custom Modules (Ensure these files exist in the same folder)
+from strategies import apply_sma_strategy, apply_mean_reversion_strategy, calculate_performance_metrics
 from report import generate_daily_report
-import json
-import os
-import glob
-app = FastAPI()
+
+# --- 1. LOGGING CONFIGURATION ---
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("app.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# --- 2. FASTAPI SETUP ---
+app = FastAPI(title="Portfolio Backtest Engine")
 
 # Allow React to talk to this API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Frontend URL
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# --- 3. GLOBAL ERROR HANDLER (Middleware) ---
+@app.middleware("http")
+async def global_exception_handler(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception as e:
+        logger.critical(f"CRITICAL SERVER ERROR: {e}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal Server Error. Check logs for details."}
+        )
+
+# --- 4. ROBUST DATA FETCHING LOGIC (Retry + Fallback) ---
+
+def generate_mock_data(ticker, period="1y"):
+    """
+    FALLBACK: Generates consistent fake data if API fails.
+    Prevents the demo from crashing during network issues.
+    """
+    logger.warning(f"Using Mock Data for {ticker}")
+    # Generate approx 252 trading days
+    dates = pd.date_range(end=pd.Timestamp.now(), periods=252)
+    
+    # Random Walk
+    prices = [100.0]
+    for _ in range(len(dates)-1):
+        change = random.uniform(-0.02, 0.02)
+        prices.append(prices[-1] * (1 + change))
+        
+    df = pd.DataFrame({'Close': prices, 'Open': prices}, index=dates)
+    return df
+
+def fetch_data_with_retry(ticker, period="1y", interval="1d", retries=3):
+    """
+    Robust fetcher that distinguishes between INVALID TICKERS and NETWORK ERRORS.
+    """
+    delay = 1
+    
+    for attempt in range(retries):
+        try:
+            logger.info(f"Fetching {ticker} (Attempt {attempt+1}/{retries})")
+            
+            # Attempt download
+            df = yf.download(ticker, period=period, interval=interval, progress=False)
+            
+            # CHECK 1: INVALID TICKER
+            # If the API works but returns no data, the ticker does not exist.
+            # We raise 404 immediately. Do NOT retry.
+            if df is None or df.empty:
+                logger.error(f"Ticker '{ticker}' not found (Data Empty).")
+                raise HTTPException(status_code=404, detail=f"Invalid Ticker: '{ticker}' not found.")
+            
+            # Fix MultiIndex
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
+                
+            logger.info(f"Successfully fetched {len(df)} rows for {ticker}")
+            return df
+            
+        except HTTPException as e:
+            # Re-raise the 404 Invalid Ticker error immediately (break the loop)
+            raise e
+            
+        except Exception as e:
+            # CHECK 2: NETWORK / API ERROR
+            # This is a connection issue. We SHOULD retry.
+            logger.warning(f"Network error on attempt {attempt+1}: {e}")
+            if attempt < retries - 1:
+                time.sleep(delay)
+                delay *= 2 
+            else:
+                logger.error("Network failed after all retries.")
+                # We do not fallback to mock data anymore, we tell the truth.
+                raise HTTPException(status_code=503, detail="Network Error: Unable to connect to market data.")
+
+    # Should not be reached, but safety net
+    raise HTTPException(status_code=503, detail="Service Unavailable")
+
+# --- 5. ENDPOINTS ---
+
 @app.get("/")
 def read_root():
-    return {"status": "API is running"}
+    return {"status": "API is running", "version": "1.0.0"}
+
+# --- Real-Time Data with Cache ---
 quote_cache = {}
 CACHE_DURATION = 60
-# Endpoint for Single Asset Data
-@app.get("/api/asset/{ticker}")
-def get_asset_data(ticker: str):
-    # Fetch 1 year of data
-    df = yf.download(ticker, period="2y")
-    
-    # Check ticker
-    if df is None or df.empty:
-        raise HTTPException(status_code=404, detail=f"No data found for {ticker}")
-    
-    # Flatten columns if yfinance returns ('Close', 'AAPL') format
-    if isinstance(df.columns, pd.MultiIndex):
-        df.columns = df.columns.get_level_values(0)
-
-    # Reset index to make Date a column
-    df.reset_index(inplace=True)
-    
-    # Filter columns safely
-    required_columns = ['Date', 'Close', 'Open', 'High', 'Low']
-    available_columns = [col for col in required_columns if col in df.columns]
-    
-    result = df[available_columns].to_dict(orient='records')
-    return result
 
 @app.get("/api/asset/{ticker}/realtime")
 def get_realtime_asset(ticker: str):
@@ -65,88 +141,77 @@ def get_realtime_asset(ticker: str):
             print(f"⚡ Serving {ticker} from Cache")
             return cached_item['data']
 
-    # 2. Fetch Fresh Data (if cache missing or expired)
+    # 2. Fetch Fresh Data
     try:
         print(f"Fetching {ticker} from API...")
         stock = yf.Ticker(ticker)
-        price = stock.fast_info['last_price']
-        prev_close = stock.fast_info['previous_close']
         
+        # Accessing fast_info triggers the network call
+        try:
+            price = stock.fast_info['last_price']
+            prev_close = stock.fast_info['previous_close']
+        except Exception:
+            # If fast_info fails, it's likely a network or ticker issue.
+            # yfinance makes it hard to distinguish, but usually:
+            raise HTTPException(status_code=503, detail="Network Error or Invalid Ticker")
+
+        # Check for None (Invalid Ticker often returns None for price)
+        if price is None:
+             raise HTTPException(status_code=404, detail=f"Invalid Ticker: {ticker}")
+
         change = price - prev_close
         pct_change = (change / prev_close) * 100
         
-        # 3. Build Response Object with Timestamp
         data = {
             "symbol": ticker,
             "price": round(price, 2),
             "change": round(change, 2),
             "pct_change": round(pct_change, 2),
-            "last_updated": time.strftime('%H:%M:%S', time.localtime(current_time)) # <--- Timestamp Requirement
+            "last_updated": datetime.now().strftime('%H:%M:%S')
         }
         
-        # 4. Save to Cache
         quote_cache[ticker] = {
             "data": data,
             "expiry": current_time + CACHE_DURATION
         }
-        
         return data
 
+    except HTTPException as e:
+        raise e
     except Exception as e:
-        raise HTTPException(status_code=404, detail="Ticker not found")
-# Endpoint for the SMAC Strategy
+        logger.error(f"Realtime fetch failed: {e}")
+        raise HTTPException(status_code=503, detail="Network Error: External API Unavailable")
+    
+# --- Strategy: SMA Crossover ---
 @app.get("/api/backtest/sma/{ticker}")
 def backtest_sma(
     ticker: str, 
     short_window: int = 20, 
     long_window: int = 50,
-    period: str = "1y",       # <--- NEW
-    timeframe: str = "daily"  # <--- NEW
+    period: str = "1y",
+    timeframe: str = "daily"
 ):
-    # --- 1. VALIDATION LAYER (Safety Checks) ---
-    # Define allowed values
+    # Validation
     valid_periods = ["1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "max"]
-    timeframe_mapping = {
-        "daily": "1d",
-        "weekly": "1wk", 
-        "monthly": "1mo"
-    }
+    timeframe_mapping = {"daily": "1d", "weekly": "1wk", "monthly": "1mo"}
     
-    # Check 1: Is the period valid?
     if period not in valid_periods:
         raise HTTPException(status_code=400, detail=f"Invalid period. Allowed: {valid_periods}")
-
-    # Check 2: Is the timeframe valid?
     if timeframe not in timeframe_mapping:
-        raise HTTPException(status_code=400, detail="Invalid timeframe. Use: daily, weekly, monthly")
-
-    # Check 3: Logical Math Error (Short > Long)
+        raise HTTPException(status_code=400, detail="Invalid timeframe.")
     if short_window >= long_window:
         raise HTTPException(status_code=400, detail="Short window must be less than Long window")
 
-    # --- 2. FETCH DATA ---
-    # Use the mapped interval (e.g., "daily" -> "1d")
-    df = yf.download(ticker, period=period, interval=timeframe_mapping[timeframe])
-    
-    if df is None or df.empty:
-        raise HTTPException(status_code=404, detail="No data found for this configuration")
+    # Fetch Data (Robust)
+    df = fetch_data_with_retry(ticker, period=period, interval=timeframe_mapping[timeframe])
 
-    # Fix MultiIndex if necessary
-    if isinstance(df.columns, pd.MultiIndex):
-        df.columns = df.columns.get_level_values(0)
-
-    # --- 3. APPLY STRATEGY ---
-    # (The strategy logic remains the same, it adapts to the DF length)
+    # Apply Strategy
     processed_data = apply_sma_strategy(df, short_window, long_window)
-    
-    # Calculate Metrics
     metrics = calculate_performance_metrics(processed_data['Strategy_Return'])
 
-    # --- 4. FORMAT RESPONSE ---
+    # Format
     processed_data.reset_index(inplace=True)
-    # Handle different date formats (Weekly/Monthly might look different)
     processed_data['Date'] = pd.to_datetime(processed_data['Date']).dt.strftime('%Y-%m-%d')
-    
     processed_data.replace([np.inf, -np.inf], 0, inplace=True)
     processed_data.fillna(0, inplace=True)
     
@@ -154,11 +219,9 @@ def backtest_sma(
         'Date', 'Cumulative_Market', 'Cumulative_Strategy', 'Signal'
     ]].to_dict(orient='records')
     
-    return {
-        "metrics": metrics,
-        "data": result
-    }
+    return {"metrics": metrics, "data": result}
 
+# --- Strategy: Mean Reversion ---
 @app.get("/api/backtest/mean-reversion/{ticker}")
 def backtest_mean_reversion(
     ticker: str, 
@@ -167,27 +230,20 @@ def backtest_mean_reversion(
     period: str = "1y",
     timeframe: str = "daily"
 ):
-    # --- Validation ---
+    # Validation
     if window < 2:
          raise HTTPException(status_code=400, detail="Window must be at least 2")
     
-    # --- Fetch Data ---
     timeframe_mapping = {"daily": "1d", "weekly": "1wk", "monthly": "1mo"}
-    df = yf.download(ticker, period=period, interval=timeframe_mapping.get(timeframe, "1d"))
     
-    if df is None or df.empty:
-        raise HTTPException(status_code=404, detail="No data found")
-        
-    if isinstance(df.columns, pd.MultiIndex):
-        df.columns = df.columns.get_level_values(0)
+    # Fetch Data (Robust)
+    df = fetch_data_with_retry(ticker, period=period, interval=timeframe_mapping.get(timeframe, "1d"))
 
-    # --- Apply Strategy ---
+    # Apply Strategy
     processed_data = apply_mean_reversion_strategy(df, window, threshold)
-    
-    # --- Calculate Metrics ---
     metrics = calculate_performance_metrics(processed_data['Strategy_Return'])
 
-    # --- Format Response ---
+    # Format
     processed_data.reset_index(inplace=True)
     processed_data['Date'] = pd.to_datetime(processed_data['Date']).dt.strftime('%Y-%m-%d')
     processed_data.replace([np.inf, -np.inf], 0, inplace=True)
@@ -197,40 +253,27 @@ def backtest_mean_reversion(
         'Date', 'Cumulative_Market', 'Cumulative_Strategy', 'Signal', 'Z_Score'
     ]].to_dict(orient='records')
     
-    return {
-        "metrics": metrics,
-        "data": result
-    }
+    return {"metrics": metrics, "data": result}
 
+# --- Reporting ---
 @app.get("/api/reports/latest")
 def get_latest_report():
-    """
-    Scans the /reports folder and returns the most recent JSON file.
-    """
     reports_dir = "reports"
-    
-    # Find all json files in the reports folder
+    if not os.path.exists(reports_dir):
+        raise HTTPException(status_code=404, detail="Reports directory not found.")
+        
     list_of_files = glob.glob(f'{reports_dir}/*.json') 
-    
     if not list_of_files:
         raise HTTPException(status_code=404, detail="No reports found. Run daily_report.py first.")
         
-    # Get the latest file based on creation time
     latest_file = max(list_of_files, key=os.path.getctime)
     
-    # Read and return content
     with open(latest_file, 'r') as f:
         data = json.load(f)
-        
     return data
 
 @app.post("/api/reports/generate")
 def trigger_daily_report(background_tasks: BackgroundTasks):
-    """
-    Triggers the report generation in the background.
-    The server responds immediately with "Accepted", 
-    while the script runs silently.
-    """
+    # Runs the heavy script in the background
     background_tasks.add_task(generate_daily_report)
-    
     return {"status": "Report generation started", "message": "Check back in 10-20 seconds"}
