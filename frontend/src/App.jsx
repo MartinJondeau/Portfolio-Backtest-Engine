@@ -1,18 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { 
-  ComposedChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer, 
-  Brush,         
-  ReferenceArea, 
-  Scatter       
-} from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import LiveBadge from './LiveBadge' 
 import './App.css'
 
