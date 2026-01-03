@@ -1,26 +1,37 @@
+// frontend/src/LiveBadge.jsx
+
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 export default function LiveBadge({ ticker }) {
     const [quote, setQuote] = useState(null);
+    const [error, setError] = useState(false); // New Error State
 
     const fetchQuote = async () => {
         try {
+            setError(false);
             const res = await axios.get(`http://127.0.0.1:8001/api/asset/${ticker}/realtime`);
             setQuote(res.data);
         } catch (err) {
             console.error(err);
+            setError(true); // Trigger error mode
         }
     };
 
     useEffect(() => {
-        fetchQuote(); // Run immediately
-        const interval = setInterval(fetchQuote, 5000); // Refresh every 5 seconds
-        return () => clearInterval(interval); // Cleanup on close
+        fetchQuote(); 
+        const interval = setInterval(fetchQuote, 60000); // 60s is better than 5s for rate limits
+        return () => clearInterval(interval); 
     }, [ticker]);
 
-    if (!quote) return <div className="badge loading">Loading...</div>;
+    // Handle Error State in UI
+    if (error) return (
+        <div style={{ padding: '10px 20px', background: '#333', color: '#ff6b6b', borderRadius: '12px', border: '1px solid #ff6b6b' }}>
+            Invalid Ticker
+        </div>
+    );
 
+    if (!quote) return <div style={{ color: '#888' }}>Loading...</div>;
     const isPositive = quote.change >= 0;
     const color = isPositive ? '#4CAF50' : '#F44336';
 

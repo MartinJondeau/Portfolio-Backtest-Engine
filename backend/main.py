@@ -138,27 +138,25 @@ def get_realtime_asset(ticker: str):
     if ticker in quote_cache:
         cached_item = quote_cache[ticker]
         if current_time < cached_item['expiry']:
-            print(f"⚡ Serving {ticker} from Cache")
             return cached_item['data']
 
     # 2. Fetch Fresh Data
     try:
-        print(f"Fetching {ticker} from API...")
         stock = yf.Ticker(ticker)
         
-        # Accessing fast_info triggers the network call
+        # yfinance logic: If ticker is invalid, accessing fast_info often causes a KeyError
         try:
             price = stock.fast_info['last_price']
             prev_close = stock.fast_info['previous_close']
-        except Exception:
-            # If fast_info fails, it's likely a network or ticker issue.
-            # yfinance makes it hard to distinguish, but usually:
-            raise HTTPException(status_code=503, detail="Network Error or Invalid Ticker")
-
-        # Check for None (Invalid Ticker often returns None for price)
-        if price is None:
-             raise HTTPException(status_code=404, detail=f"Invalid Ticker: {ticker}")
-
+            
+            # Additional check: If yfinance returns None, it's invalid
+            if price is None:
+                raise ValueError("Price is None")
+                
+        except (KeyError, TypeError, ValueError):
+            # CATCH THE BUG: Specific errors mean the ticker doesn't exist
+            raise HTTPException(status_code=404, detail=f"Ticker '{ticker}' not found")
+            
         change = price - prev_close
         pct_change = (change / prev_close) * 100
         
@@ -177,9 +175,10 @@ def get_realtime_asset(ticker: str):
         return data
 
     except HTTPException as e:
-        raise e
+        raise e  # Pass 404 through
     except Exception as e:
         logger.error(f"Realtime fetch failed: {e}")
+        # Only generic crashes are 503
         raise HTTPException(status_code=503, detail="Network Error: External API Unavailable")
     
 # --- Strategy: SMA Crossover ---
