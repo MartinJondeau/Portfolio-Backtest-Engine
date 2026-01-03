@@ -1,0 +1,366 @@
+2026-01-03 15:41:53,449 [ERROR] $K: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:41:53,479 [ERROR] $KDS: possibly delisted; no price data found  (period=1y)
+2026-01-03 15:41:53,615 [ERROR] $K: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:41:53,663 [ERROR] $KDS: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:41:53,716 [ERROR] $KDS: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:41:54,099 [ERROR] HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: KDSND"}}}
+2026-01-03 15:41:54,113 [ERROR] HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: KDSN"}}}
+2026-01-03 15:41:54,205 [ERROR] Realtime fetch failed: unsupported operand type(s) for -: 'NoneType' and 'NoneType'
+2026-01-03 15:41:54,268 [ERROR] Realtime fetch failed: unsupported operand type(s) for -: 'float' and 'NoneType'
+2026-01-03 15:41:54,324 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:41:54,604 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:41:54,606 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:41:54,820 [ERROR] $KDSN: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:41:54,873 [ERROR] $KDSND: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:41:55,093 [ERROR] $KDSN: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:41:55,095 [ERROR] 
+1 Failed download:
+2026-01-03 15:41:55,097 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:41:55,100 [ERROR] ['KDSN']: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:41:55,143 [ERROR] $KDSND: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:41:55,143 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:41:56,688 [ERROR] 
+1 Failed download:
+2026-01-03 15:41:56,689 [ERROR] ['KDSNDS']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 15:41:58,767 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:41:58,775 [ERROR] 
+1 Failed download:
+2026-01-03 15:41:58,776 [ERROR] ['KDSNDS']: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:41:59,106 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:41:59,107 [ERROR] 
+1 Failed download:
+2026-01-03 15:41:59,108 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:41:59,111 [ERROR] ['KDSNDS']: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:00,591 [ERROR] 
+1 Failed download:
+2026-01-03 15:42:00,591 [ERROR] ['KDSNDS']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 15:42:02,173 [ERROR] 
+1 Failed download:
+2026-01-03 15:42:02,173 [ERROR] ['KDSNDS']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 15:42:03,225 [ERROR] 
+1 Failed download:
+2026-01-03 15:42:03,228 [ERROR] ['KDSNDS']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 15:42:03,236 [ERROR] 
+1 Failed download:
+2026-01-03 15:42:03,242 [ERROR] ['KDSNDS']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 15:42:03,903 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:04,197 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:04,199 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:42:05,918 [ERROR] 
+1 Failed download:
+2026-01-03 15:42:05,921 [ERROR] ['KDSNDS']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 15:42:06,373 [ERROR] 
+1 Failed download:
+2026-01-03 15:42:06,374 [ERROR] ['KDSNDS']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 15:42:07,906 [ERROR] 
+1 Failed download:
+2026-01-03 15:42:07,907 [ERROR] ['KDSNDS']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 15:42:09,135 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:09,662 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:09,663 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:42:10,321 [ERROR] 
+1 Failed download:
+2026-01-03 15:42:10,321 [ERROR] ['KDSNDS']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 15:42:10,862 [ERROR] 
+1 Failed download:
+2026-01-03 15:42:10,863 [ERROR] ['KDSNDS']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 15:42:12,214 [ERROR] 
+1 Failed download:
+2026-01-03 15:42:12,215 [ERROR] ['KDSNDS']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 15:42:14,206 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:14,521 [ERROR] 
+1 Failed download:
+2026-01-03 15:42:14,524 [ERROR] ['KDSNDS']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 15:42:14,524 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:14,531 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:42:19,202 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:19,482 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:19,488 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:42:24,071 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:24,394 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:24,396 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:42:29,071 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:29,350 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:29,355 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:42:34,141 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:34,479 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:34,481 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:42:39,068 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:39,412 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:39,413 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:42:45,099 [ERROR] HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: KDSNDS"}}}
+2026-01-03 15:42:45,717 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:45,999 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:46,001 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:42:49,306 [ERROR] HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: KDSNDS"}}}
+2026-01-03 15:42:49,795 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:50,090 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:50,092 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:42:54,059 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:54,519 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:54,520 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:42:59,060 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:59,333 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:42:59,335 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:43:04,379 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:43:04,851 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:43:04,852 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:43:09,080 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:43:09,372 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:43:09,374 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:44:03,255 [ERROR] HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: KDSNDS"}}}
+2026-01-03 15:44:04,051 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:44:04,336 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:44:04,337 [ERROR] Realtime fetch failed: 'currentTradingPeriod'
+2026-01-03 15:45:01,825 [ERROR] HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: KDSNDS"}}}
+2026-01-03 15:45:02,424 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:02,743 [ERROR] $KDSNDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:46,075 [INFO] Fetching NVDA (Attempt 1/3)
+2026-01-03 15:45:46,283 [INFO] Successfully fetched 250 rows for NVDA
+2026-01-03 15:45:49,984 [ERROR] $,JDM: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:49,988 [ERROR] $,J: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:50,085 [ERROR] HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: ,JD"}}}
+2026-01-03 15:45:50,220 [ERROR] $,J: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:50,223 [ERROR] $,: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:50,224 [ERROR] $,JDMS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:50,234 [ERROR] $,JDM: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:50,237 [ERROR] $,JDMSQ: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:50,504 [ERROR] $,: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:50,506 [ERROR] $,JDMSQ: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:50,505 [ERROR] $,JDMS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:50,846 [ERROR] $,JDMSQDQ: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:50,847 [ERROR] $,JDMSQD: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:51,043 [INFO] Fetching ,jdmsqdq (Attempt 1/3)
+2026-01-03 15:45:51,101 [ERROR] $,JD: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:51,110 [ERROR] 
+1 Failed download:
+2026-01-03 15:45:51,113 [ERROR] [',JD']: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:51,120 [ERROR] Ticker ',jdmsqdq' not found (Data Empty).
+2026-01-03 15:45:51,311 [ERROR] $,JDMSQDQ: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:51,315 [ERROR] $,JDMSQD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:51,676 [ERROR] $,JD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:54,396 [INFO] Fetching ,jdmsqdq (Attempt 1/3)
+2026-01-03 15:45:54,823 [ERROR] $,JDMSQDQ: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:54,829 [ERROR] 
+2 Failed downloads:
+2026-01-03 15:45:54,832 [ERROR] [',JDMSQDQ']: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:54,833 [ERROR] ['JDMSQDQ']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 15:45:54,841 [ERROR] Ticker ',jdmsqdq' not found (Data Empty).
+2026-01-03 15:45:55,102 [ERROR] $,JDMSQDQ: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:57,219 [ERROR] $JDS: possibly delisted; no price data found  (period=1y)
+2026-01-03 15:45:57,329 [ERROR] $JDS: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:45:57,576 [ERROR] $JDS: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:45:57,888 [ERROR] $JDSD: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:58,166 [ERROR] $JDSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:58,172 [ERROR] $JDSDQS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:58,177 [ERROR] $JDSDQ: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:58,648 [ERROR] $JDSDQ: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:58,655 [ERROR] $JDSDQS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:45:58,771 [INFO] Fetching JDSDQS (Attempt 1/3)
+2026-01-03 15:45:59,178 [ERROR] 
+1 Failed download:
+2026-01-03 15:45:59,179 [ERROR] ['JDSDQS']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 15:45:59,184 [ERROR] Ticker 'JDSDQS' not found (Data Empty).
+2026-01-03 15:46:01,570 [INFO] Fetching JDSDQS (Attempt 1/3)
+2026-01-03 15:46:02,017 [ERROR] 
+1 Failed download:
+2026-01-03 15:46:02,019 [ERROR] ['JDSDQS']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 15:46:02,025 [ERROR] Ticker 'JDSDQS' not found (Data Empty).
+2026-01-03 15:46:02,704 [ERROR] $JDSDQS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:03,123 [ERROR] $JDSDQS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:09,157 [INFO] Fetching DVS (Attempt 1/3)
+2026-01-03 15:46:09,381 [INFO] Successfully fetched 250 rows for DVS
+2026-01-03 15:46:12,234 [ERROR] $DVSD: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:12,526 [ERROR] $DVSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:12,530 [ERROR] $DVSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:13,056 [ERROR] $DVSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:13,326 [INFO] Fetching DVSDS (Attempt 1/3)
+2026-01-03 15:46:13,746 [ERROR] 
+1 Failed download:
+2026-01-03 15:46:13,750 [ERROR] ['DVSDS']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 15:46:13,755 [ERROR] Ticker 'DVSDS' not found (Data Empty).
+2026-01-03 15:46:17,130 [ERROR] $DVSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:17,475 [ERROR] $DVSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:28,021 [ERROR] HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: DVSDS"}}}
+2026-01-03 15:46:28,535 [ERROR] $DVSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:28,820 [ERROR] $DVSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:35,730 [ERROR] $BD: possibly delisted; no price data found  (period=1y)
+2026-01-03 15:46:35,821 [ERROR] $BD: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:46:35,861 [ERROR] $BD: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:46:35,938 [ERROR] $BDU: possibly delisted; no price data found  (period=1y)
+2026-01-03 15:46:36,076 [ERROR] $BDU: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:46:36,110 [ERROR] $BDU: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:46:36,334 [ERROR] $BDUS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:36,426 [ERROR] HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: BDUSBD"}}}
+2026-01-03 15:46:36,601 [ERROR] $BDUSB: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:36,605 [ERROR] $BDUS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:36,610 [ERROR] $BDUSBDQ: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:36,975 [ERROR] $BDUSBDQ: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:37,032 [INFO] Fetching bdusbdq (Attempt 1/3)
+2026-01-03 15:46:37,035 [ERROR] $BDUSB: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:37,195 [ERROR] $BDUSBD: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:37,200 [ERROR] 
+1 Failed download:
+2026-01-03 15:46:37,200 [ERROR] ['BDUSBD']: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:37,209 [ERROR] Ticker 'bdusbdq' not found (Data Empty).
+2026-01-03 15:46:37,533 [ERROR] $BDUSBD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:41,161 [ERROR] $BDUSBDQ: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:41,439 [ERROR] $BDUSBDQ: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:44,202 [ERROR] $BD: possibly delisted; no price data found  (period=1y)
+2026-01-03 15:46:44,267 [ERROR] $BD: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:46:44,289 [ERROR] $BD: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:46:44,331 [ERROR] $BDS: possibly delisted; no price data found  (period=1y)
+2026-01-03 15:46:44,399 [ERROR] $BDS: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:46:44,532 [ERROR] $BDS: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:46:45,100 [ERROR] $BDSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:45,102 [ERROR] $BDSD: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:45,390 [ERROR] $BDSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:45,453 [ERROR] $BDSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:45,537 [INFO] Fetching BDSDS (Attempt 1/3)
+2026-01-03 15:46:45,992 [ERROR] 
+1 Failed download:
+2026-01-03 15:46:45,994 [ERROR] ['BDSDS']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 15:46:46,006 [ERROR] Ticker 'BDSDS' not found (Data Empty).
+2026-01-03 15:46:50,096 [ERROR] $BDSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:50,455 [ERROR] $BDSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:55,088 [ERROR] $BDSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:46:55,459 [ERROR] $BDSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:00,138 [ERROR] $BDSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:00,419 [ERROR] $BDSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:05,188 [ERROR] $BDSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:05,478 [ERROR] $BDSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:10,296 [ERROR] $BDSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:10,644 [ERROR] $BDSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:15,162 [ERROR] $BDSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:15,436 [ERROR] $BDSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:20,171 [ERROR] $BDSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:20,533 [ERROR] $BDSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:25,082 [ERROR] $BDSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:25,459 [ERROR] $BDSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:30,070 [ERROR] $BDSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:30,414 [ERROR] $BDSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:35,088 [ERROR] $BDSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:35,468 [ERROR] $BDSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:40,069 [ERROR] $BDSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:40,403 [ERROR] $BDSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:45,061 [ERROR] $BDSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:47:45,337 [ERROR] $BDSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:48:01,084 [ERROR] $BDSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:48:01,370 [ERROR] $BDSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:49:01,885 [ERROR] HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: BDSDS"}}}
+2026-01-03 15:49:02,399 [ERROR] $BDSDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:49:02,714 [ERROR] $BDSDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:53:55,990 [INFO] Fetching NVDA (Attempt 1/3)
+2026-01-03 15:53:56,196 [INFO] Successfully fetched 250 rows for NVDA
+2026-01-03 15:53:59,622 [ERROR] $NV: possibly delisted; no price data found  (period=1y)
+2026-01-03 15:53:59,664 [ERROR] $N: possibly delisted; no price data found  (period=1y)
+2026-01-03 15:53:59,691 [ERROR] $NV: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:53:59,725 [ERROR] $N: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:53:59,735 [ERROR] $NV: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:53:59,746 [ERROR] $N: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:54:01,975 [INFO] Fetching TSTDS (Attempt 1/3)
+2026-01-03 15:54:04,067 [ERROR] $TSTD: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:54:04,071 [ERROR] 
+1 Failed download:
+2026-01-03 15:54:04,072 [ERROR] ['TSTD']: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:54:04,080 [ERROR] Ticker 'TSTDS' not found (Data Empty).
+2026-01-03 15:54:04,108 [ERROR] HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: TSTDS"}}}
+2026-01-03 15:54:04,316 [ERROR] $TSTD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:54:04,880 [ERROR] $TSTDS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:54:05,227 [ERROR] $TSTDS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:54:05,287 [ERROR] $TST: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:54:05,629 [ERROR] $TST: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 15:54:16,963 [INFO] Fetching STEP (Attempt 1/3)
+2026-01-03 15:54:17,158 [INFO] Successfully fetched 250 rows for STEP
+2026-01-03 15:54:25,931 [INFO] Fetching STEP (Attempt 1/3)
+2026-01-03 15:54:26,108 [INFO] Successfully fetched 250 rows for STEP
+2026-01-03 15:54:33,483 [INFO] Fetching STEP (Attempt 1/3)
+2026-01-03 15:54:33,675 [INFO] Successfully fetched 250 rows for STEP
+2026-01-03 15:54:44,472 [INFO] Fetching STEP (Attempt 1/3)
+2026-01-03 15:54:44,620 [INFO] Successfully fetched 250 rows for STEP
+2026-01-03 15:54:49,266 [INFO] Fetching STEP (Attempt 1/3)
+2026-01-03 15:54:49,456 [INFO] Successfully fetched 250 rows for STEP
+2026-01-03 15:54:54,514 [INFO] Fetching STEP (Attempt 1/3)
+2026-01-03 15:54:54,678 [INFO] Successfully fetched 250 rows for STEP
+2026-01-03 15:55:05,820 [ERROR] $N: possibly delisted; no price data found  (period=1y)
+2026-01-03 15:55:05,882 [ERROR] $N: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:55:05,907 [ERROR] $N: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:55:05,957 [ERROR] $NV: possibly delisted; no price data found  (period=1y)
+2026-01-03 15:55:06,034 [ERROR] $NV: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:55:06,074 [ERROR] $NV: possibly delisted; no price data found  (period=5d)
+2026-01-03 15:55:07,196 [INFO] Fetching NVDA (Attempt 1/3)
+2026-01-03 15:55:07,383 [INFO] Successfully fetched 250 rows for NVDA
+2026-01-03 15:55:12,533 [INFO] Fetching TSLA (Attempt 1/3)
+2026-01-03 15:55:12,647 [INFO] Successfully fetched 250 rows for TSLA
+2026-01-03 15:55:19,086 [INFO] Fetching TSLA (Attempt 1/3)
+2026-01-03 15:55:19,289 [INFO] Successfully fetched 250 rows for TSLA
+2026-01-03 16:04:14,838 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:04:15,083 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-03 16:05:24,402 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:05:24,944 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-03 16:05:24,974 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:05:25,229 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-03 16:05:25,440 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:05:25,630 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-03 16:05:25,655 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:05:25,867 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-03 16:07:31,672 [ERROR] $DSD: possibly delisted; no price data found  (period=1y)
+2026-01-03 16:07:31,906 [ERROR] $DSD: possibly delisted; no price data found  (period=5d)
+2026-01-03 16:07:31,927 [ERROR] $DSD: possibly delisted; no price data found  (period=5d)
+2026-01-03 16:07:32,189 [ERROR] $DSDQ: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 16:07:32,193 [ERROR] $DSDQS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 16:07:32,290 [ERROR] HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: DSDQSD"}}}
+2026-01-03 16:07:32,790 [ERROR] $DSDQ: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 16:07:32,792 [ERROR] $DSDQS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 16:07:33,011 [ERROR] $DS: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 16:07:33,075 [INFO] Fetching DSDQSD (Attempt 1/3)
+2026-01-03 16:07:33,412 [ERROR] $DS: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 16:07:33,418 [ERROR] 
+1 Failed download:
+2026-01-03 16:07:33,423 [ERROR] ['DS']: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 16:07:33,425 [ERROR] ['DSDQSD']: YFPricesMissingError('possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")')
+2026-01-03 16:07:33,440 [ERROR] Ticker 'DSDQSD' not found (Data Empty).
+2026-01-03 16:07:33,464 [ERROR] $DSDQSD: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 16:07:33,744 [ERROR] $DSDQSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-03 16:08:45,259 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:08:45,475 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-03 16:15:34,367 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:15:34,619 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-03 16:16:08,001 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:16:08,219 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-03 16:16:44,733 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:16:44,934 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-03 16:21:42,807 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:21:43,054 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-03 16:26:42,815 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:26:43,191 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-03 16:27:25,149 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:27:25,409 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-03 16:29:02,646 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:29:02,925 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-03 16:29:12,376 [ERROR] $N: possibly delisted; no price data found  (period=1y)
+2026-01-03 16:29:12,433 [ERROR] $N: possibly delisted; no price data found  (period=5d)
+2026-01-03 16:29:12,467 [ERROR] $N: possibly delisted; no price data found  (period=5d)
+2026-01-03 16:29:12,599 [ERROR] $NV: possibly delisted; no price data found  (period=1y)
+2026-01-03 16:29:12,664 [ERROR] $NV: possibly delisted; no price data found  (period=5d)
+2026-01-03 16:29:12,815 [ERROR] $NV: possibly delisted; no price data found  (period=5d)
+2026-01-03 16:29:13,920 [INFO] Fetching NVDA (Attempt 1/3)
+2026-01-03 16:29:20,824 [INFO] Successfully fetched 250 rows for NVDA
+2026-01-03 16:29:20,858 [INFO] Fetching NVDA (Attempt 1/3)
+2026-01-03 16:29:21,060 [INFO] Successfully fetched 250 rows for NVDA
+2026-01-03 16:29:21,089 [INFO] Fetching NVDA (Attempt 1/3)
+2026-01-03 16:29:21,309 [INFO] Successfully fetched 250 rows for NVDA
+2026-01-03 16:29:23,131 [INFO] Fetching NVDA (Attempt 1/3)
+2026-01-03 16:29:23,363 [INFO] Successfully fetched 250 rows for NVDA
+2026-01-03 16:29:32,165 [INFO] Fetching STEP (Attempt 1/3)
+2026-01-03 16:29:32,395 [INFO] Successfully fetched 250 rows for STEP
+2026-01-03 16:29:40,304 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:29:40,543 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-03 16:29:46,073 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:29:46,329 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-03 16:29:56,890 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:29:57,093 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-03 16:31:42,459 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:31:42,663 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-03 16:32:50,086 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-03 16:32:50,282 [INFO] Successfully fetched 250 rows for AAPL
