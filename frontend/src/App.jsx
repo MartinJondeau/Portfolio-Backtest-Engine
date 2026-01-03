@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { 
+  LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
+} from 'recharts'
 import PortfolioView from './PortfolioView'
 import LiveBadge from './LiveBadge'
 import './App.css'
 
 function App() {
-  const [activeTab, setActiveTab] = useState('strategies')
+  // CHANGED: Default tab is now 'single'
+  const [activeTab, setActiveTab] = useState('single')
 
   return (
     <div style={{ 
@@ -76,9 +79,9 @@ function App() {
         padding: '0 40px'
       }}>
         {[
-          { id: 'strategies', label: 'STRATEGIES' },
-          { id: 'single', label: 'SINGLE ASSET' },
-          { id: 'portfolio', label: 'PORTFOLIO' }
+          { id: 'single', label: 'ASSET VIEW' }, 
+          { id: 'strategies', label: 'STRATEGY BACKTEST' },
+          { id: 'portfolio', label: 'PORTFOLIO MANAGEMENT' }
         ].map(tab => (
           <button
             key={tab.id}
@@ -116,8 +119,8 @@ function App() {
 
       {/* Content - Full Width */}
       <div style={{ flex: 1, width: '100%', overflowY: 'auto' }}>
-        {activeTab === 'strategies' && <StrategiesView />}
         {activeTab === 'single' && <SingleAssetView />}
+        {activeTab === 'strategies' && <StrategiesView />}
         {activeTab === 'portfolio' && <PortfolioView />}
       </div>
 
@@ -131,14 +134,255 @@ function App() {
         textAlign: 'center',
         letterSpacing: '1px'
       }}>
-        BLOOMBERG TERMINAL © 2026 | QUANT A & QUANT B - PORTFOLIO ANALYSIS MODULE
+        © 2026 | ADRIEN BAYRE & MARTIN JONDEAU - PORTFOLIO BACKTEST ENGINE
       </footer>
     </div>
   )
 }
 
 // ========================================
-// STRATEGIES VIEW (QUANT A - Advanced)
+// 1. WATCHLIST / MARKET OVERVIEW
+// ========================================
+function SingleAssetView() {
+  // State
+  const [watchlist, setWatchlist] = useState(['AAPL', 'NVDA', 'BTC-USD', 'SPY'])
+  const [period, setPeriod] = useState('1y')
+  const [newTicker, setNewTicker] = useState('')
+  
+  // Data Store: { "AAPL": { data: [...], stats: {...} }, "NVDA": ... }
+  const [assetsData, setAssetsData] = useState({})
+  const [loading, setLoading] = useState(false)
+
+  // Neon Color Palette to cycle through
+  const colors = ['#ff8c00', '#00ff88', '#00d4ff', '#ff4444', '#d264ff', '#ffff00']
+
+  // Fetch logic
+  const fetchAllAssets = async () => {
+    setLoading(true)
+    const newData = {}
+
+    // We fetch all tickers in parallel
+    await Promise.all(watchlist.map(async (ticker) => {
+      try {
+        const response = await axios.get(`http://127.0.0.1:8001/api/asset/${ticker}?period=${period}`)
+        const rawData = response.data
+        
+        // Calculate Stats
+        const prices = rawData.map(d => d.Close)
+        const last = prices[prices.length - 1]
+        const first = prices[0]
+        const change = ((last - first) / first) * 100
+        
+        newData[ticker] = {
+          data: rawData,
+          stats: {
+            last: last.toFixed(2),
+            high: Math.max(...prices).toFixed(2),
+            low: Math.min(...prices).toFixed(2),
+            change: change.toFixed(2),
+            isPositive: change >= 0
+          }
+        }
+      } catch (err) {
+        console.error(`Failed to fetch ${ticker}`, err)
+      }
+    }))
+
+    setAssetsData(newData)
+    setLoading(false)
+  }
+
+  // Refetch when watchlist or period changes
+  useEffect(() => {
+    fetchAllAssets()
+  }, [period, watchlist]) // <--- Dependency array triggers update
+
+  const handleAddTicker = () => {
+    if (newTicker && !watchlist.includes(newTicker.toUpperCase())) {
+      setWatchlist([...watchlist, newTicker.toUpperCase()])
+      setNewTicker('')
+    }
+  }
+
+  const handleRemoveTicker = (tickerToRemove) => {
+    setWatchlist(watchlist.filter(t => t !== tickerToRemove))
+    // Also remove data to clean up memory
+    const newData = { ...assetsData }
+    delete newData[tickerToRemove]
+    setAssetsData(newData)
+  }
+
+  return (
+    <div style={{ padding: '40px', width: '100%', maxWidth: '1600px', margin: '0 auto' }}>
+      
+      {/* --- TOP: PARAMETERS --- */}
+      <div style={{ 
+        background: '#1a1a1a', 
+        padding: '20px', 
+        borderRadius: '8px', 
+        marginBottom: '30px',
+        border: '1px solid #333',
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '20px',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        
+        {/* Left: Watchlist Controls */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <h3 style={{ margin: 0, color: '#ff8c00', fontSize: '14px', textTransform: 'uppercase' }}>Watchlist:</h3>
+          <input 
+            value={newTicker} 
+            onChange={(e) => setNewTicker(e.target.value)} 
+            onKeyDown={(e) => e.key === 'Enter' && handleAddTicker()}
+            placeholder="ADD TICKER..."
+            style={{ 
+              background: '#000', border: '1px solid #555', color: 'white', 
+              padding: '8px', borderRadius: '4px', outline: 'none', width: '120px' 
+            }}
+          />
+          <button onClick={handleAddTicker} style={{ cursor: 'pointer', background: '#333', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px', fontWeight: 'bold' }}>+</button>
+        </div>
+
+        {/* Right: Period Selector */}
+        <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+           <span style={{ color: '#888', fontSize: '12px', marginRight: '5px' }}>PERIOD:</span>
+           {['1mo', '3mo', '6mo', '1y', '2y', '5y'].map(p => (
+             <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                style={{
+                  background: period === p ? '#ff8c00' : 'transparent',
+                  color: period === p ? 'black' : '#888',
+                  border: period === p ? 'none' : '1px solid #444',
+                  padding: '6px 12px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase'
+                }}
+             >
+               {p}
+             </button>
+           ))}
+           {loading && <span style={{ marginLeft: '15px', color: '#ff8c00', fontSize: '12px' }}>Updating...</span>}
+        </div>
+      </div>
+
+      {/* --- BOTTOM: 2-COLUMN GRID --- */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fill, minmax(600px, 1fr))', // Responsive 2 columns
+        gap: '25px' 
+      }}>
+        {watchlist.map((ticker, index) => {
+          const asset = assetsData[ticker]
+          const color = colors[index % colors.length] // Cycle colors
+          
+          if (!asset) return null // Skip if loading
+
+          return (
+            <div key={ticker} className="bloomberg-panel" style={{ 
+              background: '#111', 
+              border: '1px solid #333', 
+              borderRadius: '6px',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              
+              {/* Card Header */}
+              <div style={{ 
+                padding: '15px 20px', 
+                borderBottom: '1px solid #222', 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                background: `linear-gradient(90deg, ${color}10, transparent)` 
+              }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <h3 style={{ margin: 0, color: color, fontSize: '22px', fontWeight: '900' }}>{ticker}</h3>
+                    <span style={{ 
+                      fontSize: '14px', 
+                      fontWeight: 'bold', 
+                      color: asset.stats.isPositive ? '#00ff88' : '#ff4444' 
+                    }}>
+                      {asset.stats.isPositive ? '▲' : '▼'} {asset.stats.change}%
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                    LAST PRICE: <span style={{ color: '#eee', fontWeight: 'bold' }}>${asset.stats.last}</span>
+                  </div>
+                </div>
+                
+                {/* Stats Mini-Column */}
+                <div style={{ textAlign: 'right', fontSize: '11px', color: '#888' }}>
+                  <div>HIGH: <span style={{ color: '#eee' }}>${asset.stats.high}</span></div>
+                  <div style={{ marginTop: '2px' }}>LOW: <span style={{ color: '#eee' }}>${asset.stats.low}</span></div>
+                  <button 
+                    onClick={() => handleRemoveTicker(ticker)}
+                    style={{ 
+                      marginTop: '5px', background: 'none', border: 'none', color: '#444', 
+                      cursor: 'pointer', fontSize: '10px', textDecoration: 'underline' 
+                    }}
+                  >
+                    REMOVE
+                  </button>
+                </div>
+              </div>
+
+              {/* Chart Area */}
+              <div style={{ height: '300px', width: '100%', padding: '10px' }}>
+                <ResponsiveContainer>
+                  <AreaChart data={asset.data}>
+                    <defs>
+                      <linearGradient id={`grad${ticker}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={color} stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor={color} stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
+                    <XAxis 
+                        dataKey="Date" hide={true} // Clean look
+                    />
+                    <YAxis 
+                        domain={['auto', 'auto']} 
+                        hide={false} 
+                        orientation="right" 
+                        tick={{fill: '#444', fontSize: 10}}
+                        axisLine={false}
+                        tickLine={false}
+                    />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#000', border: `1px solid ${color}` }}
+                      itemStyle={{ color: color }}
+                      labelStyle={{ color: '#888' }}
+                      formatter={(val) => [`$${val.toFixed(2)}`, 'Price']}
+                      labelFormatter={(label) => new Date(label).toLocaleDateString()}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="Close" 
+                      stroke={color} 
+                      strokeWidth={2} 
+                      fill={`url(#grad${ticker})`} 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+
+// ========================================
+// 2. STRATEGIES VIEW (Quant A - Advanced)
 // ========================================
 function StrategiesView() {
   const [ticker, setTicker] = useState('AAPL')
@@ -157,10 +401,8 @@ function StrategiesView() {
 
   const fetchData = async () => {
     setError(null)
-    
     try {
       let url = ''
-      
       if (strategy === 'SMA') {
         url = `http://127.0.0.1:8001/api/backtest/sma/${ticker}?short_window=${shortWindow}&long_window=${longWindow}&period=${period}&timeframe=${timeframe}`
       } else if (strategy === 'MeanReversion') {
@@ -174,11 +416,9 @@ function StrategiesView() {
 
     } catch (err) {
       console.error("Fetch error:", err)
-      
       if (err.response) {
         const status = err.response.status
         const msg = err.response.data.detail
-        
         if (status === 404) setError(`❌ Ticker Not Found: ${msg}`)
         else if (status === 400) setError(`⚠️ Parameter Error: ${msg}`)
         else if (status === 503) setError(`📡 Data Source Error: ${msg}`)
@@ -196,7 +436,7 @@ function StrategiesView() {
     if (isAutoRefresh) {
       interval = setInterval(() => {
         if (!error) {
-          console.log("🔄 Auto-refresh triggered...")
+          console.log("Auto-refresh triggered...")
           fetchData()
         }
       }, 300000) // 5 minutes
@@ -206,49 +446,20 @@ function StrategiesView() {
 
   return (
     <div style={{ padding: '40px', width: '100%', maxWidth: '1600px', margin: '0 auto' }}>
-      {/* Header with LiveBadge */}
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
         <div style={{ marginBottom: '35px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <div style={{
-            width: '5px',
-            height: '30px',
-            background: '#ff8c00',
-            boxShadow: '0 0 10px rgba(255, 140, 0, 0.5)'
-          }}></div>
+          <div style={{ width: '5px', height: '30px', background: '#ff8c00', boxShadow: '0 0 10px rgba(255, 140, 0, 0.5)' }}></div>
           <div>
-            <h2 style={{ 
-              fontSize: '20px', 
-              fontWeight: '900', 
-              color: '#ff8c00',
-              letterSpacing: '3px',
-              textTransform: 'uppercase',
-              margin: 0
-            }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '900', color: '#ff8c00', letterSpacing: '3px', textTransform: 'uppercase', margin: 0 }}>
               ADVANCED STRATEGIES
             </h2>
-            {lastUpdated && (
-              <div style={{ fontSize: '10px', color: '#666', marginTop: '5px' }}>
-                Last Updated: {lastUpdated}
-              </div>
-            )}
+            {lastUpdated && <div style={{ fontSize: '10px', color: '#666', marginTop: '5px' }}>Last Updated: {lastUpdated}</div>}
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <button 
-            onClick={() => setIsAutoRefresh(!isAutoRefresh)}
-            style={{ 
-              background: 'rgba(255, 140, 0, 0.1)', 
-              border: '1px solid #ff8c00', 
-              color: '#ff8c00',
-              borderRadius: '4px', 
-              cursor: 'pointer', 
-              padding: '8px 16px', 
-              fontSize: '10px',
-              fontWeight: '700',
-              letterSpacing: '1px'
-            }}
-          >
-            {isAutoRefresh ? '⏸️ PAUSE' : '▶️ RESUME'}
+          <button onClick={() => setIsAutoRefresh(!isAutoRefresh)} style={{ background: 'rgba(255, 140, 0, 0.1)', border: '1px solid #ff8c00', color: '#ff8c00', borderRadius: '4px', cursor: 'pointer', padding: '8px 16px', fontSize: '10px', fontWeight: '700', letterSpacing: '1px' }}>
+            {isAutoRefresh ? 'PAUSE' : 'RESUME'}
           </button>
           <LiveBadge ticker={ticker} />
         </div>
@@ -261,12 +472,7 @@ function StrategiesView() {
           <option value="MeanReversion">MEAN REVERSION</option>
         </select>
 
-        <input 
-          value={ticker} 
-          onChange={(e) => setTicker(e.target.value.toUpperCase())} 
-          placeholder="TICKER"
-          style={{ minWidth: '150px' }}
-        />
+        <input value={ticker} onChange={(e) => setTicker(e.target.value.toUpperCase())} placeholder="TICKER" style={{ minWidth: '150px' }} />
 
         {strategy === 'SMA' ? (
           <>
@@ -297,34 +503,22 @@ function StrategiesView() {
         <button onClick={fetchData}>EXECUTE</button>
       </div>
 
-      {/* Error Banner */}
-      {error && (
-        <div style={{ padding: '15px', marginBottom: '20px', backgroundColor: '#331111', color: '#ff4444', border: '1px solid #ff4444', borderRadius: '4px' }}>
-          {error}
-        </div>
-      )}
+      {error && <div style={{ padding: '15px', marginBottom: '20px', backgroundColor: '#331111', color: '#ff4444', border: '1px solid #ff4444', borderRadius: '4px' }}>{error}</div>}
 
-      {/* Metrics */}
+      {/* Strategy Metrics */}
       {metrics && (
         <div className="grid-container" style={{ marginBottom: '35px' }}>
-          <MetricCard title="TOTAL RETURN" value={metrics["Total Return"]} color="#00ff88" />
-          <MetricCard title="SHARPE RATIO" value={metrics["Sharpe Ratio"]} color="#00d4ff" />
-          <MetricCard title="VOLATILITY" value={metrics["Volatility"]} color="#ffa500" />
-          <MetricCard title="MAX DRAWDOWN" value={metrics["Max Drawdown"]} color="#ff4444" />
+          <StrategyMetricCard title="TOTAL RETURN" value={metrics["Total Return"]} color="#00ff88" />
+          <StrategyMetricCard title="SHARPE RATIO" value={metrics["Sharpe Ratio"]} color="#00d4ff" />
+          <StrategyMetricCard title="VOLATILITY" value={metrics["Volatility"]} color="#ffa500" />
+          <StrategyMetricCard title="MAX DRAWDOWN" value={metrics["Max Drawdown"]} color="#ff4444" />
         </div>
       )}
 
-      {/* Chart */}
+      {/* Strategy Chart */}
       {data.length > 0 && (
         <div className="bloomberg-panel" style={{ padding: '30px' }}>
-          <h3 style={{ 
-            fontSize: '13px', 
-            fontWeight: '800', 
-            color: '#ff8c00',
-            letterSpacing: '2px',
-            marginBottom: '25px',
-            textTransform: 'uppercase'
-          }}>
+          <h3 style={{ fontSize: '13px', fontWeight: '800', color: '#ff8c00', letterSpacing: '2px', marginBottom: '25px', textTransform: 'uppercase' }}>
             CUMULATIVE PERFORMANCE
           </h3>
           <div style={{ width: '100%', height: 450 }}>
@@ -346,131 +540,13 @@ function StrategiesView() {
   )
 }
 
-// ========================================
-// SINGLE ASSET VIEW (QUANT B - Simple SMA)
-// ========================================
-function SingleAssetView() {
-  const [ticker, setTicker] = useState('AAPL')
-  const [data, setData] = useState([])
-  const [metrics, setMetrics] = useState(null)
-  
-  const fetchData = async () => {
-    try {
-      const response = await axios.get(`http://127.0.0.1:8001/api/backtest/sma/${ticker}`)      
-      setData(response.data.data)      
-      setMetrics(response.data.metrics)
-    } catch (error) {
-      console.error("Error:", error)
-      alert('CONNECTION ERROR')
-    }
-  }
-
+// Renamed Global Metric Card for Strategies to distinguish from MarketStatCard
+function StrategyMetricCard({ title, value, color }) {
   return (
-    <div style={{ padding: '40px', width: '100%', maxWidth: '1600px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '35px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-        <div style={{
-          width: '5px',
-          height: '30px',
-          background: '#ff8c00',
-          boxShadow: '0 0 10px rgba(255, 140, 0, 0.5)'
-        }}></div>
-        <h2 style={{ 
-          fontSize: '20px', 
-          fontWeight: '900', 
-          color: '#ff8c00',
-          letterSpacing: '3px',
-          textTransform: 'uppercase',
-          margin: 0
-        }}>
-          SINGLE ASSET ANALYSIS
-        </h2>
-      </div>
-      
-      <div className="controls" style={{ display: 'flex', gap: '15px', marginBottom: '35px', flexWrap: 'wrap' }}>
-        <input 
-          value={ticker} 
-          onChange={(e) => setTicker(e.target.value.toUpperCase())} 
-          placeholder="TICKER"
-          style={{ minWidth: '200px' }}
-        />
-        <button onClick={fetchData}>EXECUTE</button>
-      </div>
-
-      {metrics && (
-        <div className="grid-container" style={{ marginBottom: '35px' }}>
-          <MetricCard title="TOTAL RETURN" value={metrics["Total Return"]} color="#00ff88" />
-          <MetricCard title="SHARPE RATIO" value={metrics["Sharpe Ratio"]} color="#00d4ff" />
-          <MetricCard title="VOLATILITY" value={metrics["Volatility"]} color="#ffa500" />
-          <MetricCard title="MAX DRAWDOWN" value={metrics["Max Drawdown"]} color="#ff4444" />
-        </div>
-      )}
-
-      {data.length > 0 && (
-        <div className="bloomberg-panel" style={{ padding: '30px' }}>
-          <h3 style={{ 
-            fontSize: '13px', 
-            fontWeight: '800', 
-            color: '#ff8c00',
-            letterSpacing: '2px',
-            marginBottom: '25px',
-            textTransform: 'uppercase'
-          }}>
-            CUMULATIVE PERFORMANCE
-          </h3>
-          <div style={{ width: '100%', height: 450 }}>
-            <ResponsiveContainer>
-              <LineChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                <XAxis dataKey="Date" stroke="#777" />
-                <YAxis stroke="#777" />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="Cumulative_Market" name="BUY & HOLD" stroke="#00d4ff" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="Cumulative_Strategy" name="STRATEGY" stroke="#00ff88" dot={false} strokeWidth={3} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function MetricCard({ title, value, color }) {
-  return (
-    <div className="metric-card bloomberg-panel" style={{ 
-      padding: '25px',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        width: '100px',
-        height: '100px',
-        background: `radial-gradient(circle, ${color}15, transparent)`,
-        pointerEvents: 'none'
-      }}></div>
-      <div style={{ 
-        fontSize: '10px', 
-        color: '#666', 
-        fontWeight: '800', 
-        letterSpacing: '2px', 
-        marginBottom: '12px',
-        textTransform: 'uppercase'
-      }}>
-        {title}
-      </div>
-      <div style={{ 
-        fontSize: '32px', 
-        fontWeight: '900', 
-        color: color, 
-        fontFamily: 'Consolas, monospace',
-        textShadow: `0 0 15px ${color}40`
-      }}>
-        {value}
-      </div>
+    <div className="metric-card bloomberg-panel" style={{ padding: '25px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', top: 0, right: 0, width: '100px', height: '100px', background: `radial-gradient(circle, ${color}15, transparent)`, pointerEvents: 'none' }}></div>
+      <div style={{ fontSize: '10px', color: '#666', fontWeight: '800', letterSpacing: '2px', marginBottom: '12px', textTransform: 'uppercase' }}>{title}</div>
+      <div style={{ fontSize: '32px', fontWeight: '900', color: color, fontFamily: 'Consolas, monospace', textShadow: `0 0 15px ${color}40` }}>{value}</div>
     </div>
   )
 }
