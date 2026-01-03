@@ -6,6 +6,7 @@ function PortfolioView() {
   const [tickers, setTickers] = useState(['AAPL', 'MSFT', 'GOOGL'])
   const [newTicker, setNewTicker] = useState('')
   const [portfolioData, setPortfolioData] = useState([])
+  const [individualAssets, setIndividualAssets] = useState({})
   const [correlation, setCorrelation] = useState(null)
   const [metrics, setMetrics] = useState(null)
   const [rebalanceFreq, setRebalanceFreq] = useState('never')
@@ -39,20 +40,21 @@ function PortfolioView() {
   }
 
   const runBacktest = async () => {
-    try {
-      const response = await axios.post('http://127.0.0.1:8001/api/portfolio/backtest', {
-        tickers: tickers,
-        weights: null,
-        rebalance_frequency: rebalanceFreq,
-        period: '2y'
-      })
-      setPortfolioData(response.data.portfolio_data)
-      setMetrics(response.data.metrics)
-    } catch (error) {
-      console.error('Error:', error)
-      alert('CONNECTION ERROR')
-    }
+  try {
+    const response = await axios.post('http://127.0.0.1:8001/api/portfolio/backtest', {
+      tickers: tickers,
+      weights: null,
+      rebalance_frequency: rebalanceFreq,
+      period: '2y'
+    })
+    setPortfolioData(response.data.portfolio_data)
+    setMetrics(response.data.metrics)
+    setIndividualAssets(response.data.individual_assets)  // NOUVEAU
+  } catch (error) {
+    console.error('Error:', error)
+    alert('CONNECTION ERROR')
   }
+}
 
   return (
     <div style={{ padding: '40px', width: '100%', maxWidth: '1600px', margin: '0 auto' }}>
@@ -188,32 +190,58 @@ function PortfolioView() {
       )}
 
       {/* Chart */}
-      {portfolioData.length > 0 && (
-        <div className="bloomberg-panel" style={{ padding: '30px' }}>
-          <h3 style={{ 
-            fontSize: '13px', 
-            fontWeight: '800', 
-            color: '#ff8c00',
-            letterSpacing: '2px',
-            marginBottom: '25px',
-            textTransform: 'uppercase'
-          }}>
-            PORTFOLIO CUMULATIVE PERFORMANCE
-          </h3>
-          <div style={{ width: '100%', height: 450 }}>
-            <ResponsiveContainer>
-              <LineChart data={portfolioData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                <XAxis dataKey="Date" stroke="#777" />
-                <YAxis stroke="#777" />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="Portfolio_Cumulative" name="PORTFOLIO" stroke="#ff8c00" dot={false} strokeWidth={3} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
+{portfolioData.length > 0 && (
+  <div className="bloomberg-panel" style={{ padding: '30px' }}>
+    <h3 style={{ 
+      fontSize: '13px', 
+      fontWeight: '800', 
+      color: '#ff8c00',
+      letterSpacing: '2px',
+      marginBottom: '25px',
+      textTransform: 'uppercase'
+    }}>
+      PORTFOLIO CUMULATIVE PERFORMANCE
+    </h3>
+    <div style={{ width: '100%', height: 450 }}>
+      <ResponsiveContainer>
+        <LineChart data={portfolioData.map((row, index) => {
+          const enrichedRow = { ...row }
+          // Add individual asset data for this date
+          Object.keys(individualAssets).forEach(ticker => {
+            enrichedRow[ticker] = individualAssets[ticker][index]
+          })
+          return enrichedRow
+        })}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+          <XAxis dataKey="Date" stroke="#777" />
+          <YAxis stroke="#777" />
+          <Tooltip />
+          <Legend />
+          
+          {/* Portfolio Line - Bold Orange */}
+          <Line type="monotone" dataKey="Portfolio_Cumulative" name="PORTFOLIO" stroke="#ff8c00" dot={false} strokeWidth={4} />
+          
+          {/* Individual Asset Lines - Thinner, Different Colors */}
+          {Object.keys(individualAssets).map((ticker, index) => {
+            const colors = ['#00d4ff', '#00ff88', '#a855f7', '#fbbf24', '#ec4899']
+            return (
+              <Line 
+                key={ticker}
+                type="monotone" 
+                dataKey={ticker} 
+                name={ticker} 
+                stroke={colors[index % colors.length]} 
+                dot={false} 
+                strokeWidth={2}
+                strokeDasharray="5 5"
+              />
+            )
+          })}
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+)}
     </div>
   )
 }
