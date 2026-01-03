@@ -27,7 +27,7 @@ def read_root():
 @app.get("/api/asset/{ticker}")
 def get_asset_data(ticker: str):
     # Fetch 1 year of data
-    df = yf.download(ticker, period="1y")
+    df = yf.download(ticker, period="2y")
     
     # Check ticker
     if df is None or df.empty:
@@ -47,6 +47,26 @@ def get_asset_data(ticker: str):
     result = df[available_columns].to_dict(orient='records')
     return result
 
+@app.get("/api/quote/{ticker}")
+def get_quote(ticker: str):
+    try:
+        # Fetch just 1 day of data to get the latest close
+        stock = yf.Ticker(ticker)
+        # fast_info is often faster than history() for current price
+        price = stock.fast_info['last_price']
+        prev_close = stock.fast_info['previous_close']
+        
+        change = price - prev_close
+        pct_change = (change / prev_close) * 100
+        
+        return {
+            "symbol": ticker.upper(),
+            "price": round(price, 2),
+            "change": round(change, 2),
+            "pct_change": round(pct_change, 2)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=404, detail="Ticker not found")
 # Endpoint for the SMAC Strategy
 @app.get("/api/backtest/sma/{ticker}")
 def backtest_sma(ticker: str, short_window: int = 20, long_window: int = 50):
