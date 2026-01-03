@@ -1,6 +1,6 @@
 # Backend Main
 # Import other files
-from strategies import apply_sma_strategy, calculate_performance_metrics
+from strategies import apply_sma_strategy, apply_mean_reversion_strategy, calculate_performance_metrics
 import time
 # Import libraries
 from fastapi import FastAPI, HTTPException
@@ -147,6 +147,49 @@ def backtest_sma(
     
     result = processed_data[[
         'Date', 'Cumulative_Market', 'Cumulative_Strategy', 'Signal'
+    ]].to_dict(orient='records')
+    
+    return {
+        "metrics": metrics,
+        "data": result
+    }
+
+@app.get("/api/backtest/mean-reversion/{ticker}")
+def backtest_mean_reversion(
+    ticker: str, 
+    window: int = 20, 
+    threshold: float = 2.0,
+    period: str = "1y",
+    timeframe: str = "daily"
+):
+    # --- Validation ---
+    if window < 2:
+         raise HTTPException(status_code=400, detail="Window must be at least 2")
+    
+    # --- Fetch Data ---
+    timeframe_mapping = {"daily": "1d", "weekly": "1wk", "monthly": "1mo"}
+    df = yf.download(ticker, period=period, interval=timeframe_mapping.get(timeframe, "1d"))
+    
+    if df is None or df.empty:
+        raise HTTPException(status_code=404, detail="No data found")
+        
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
+
+    # --- Apply Strategy ---
+    processed_data = apply_mean_reversion_strategy(df, window, threshold)
+    
+    # --- Calculate Metrics ---
+    metrics = calculate_performance_metrics(processed_data['Strategy_Return'])
+
+    # --- Format Response ---
+    processed_data.reset_index(inplace=True)
+    processed_data['Date'] = pd.to_datetime(processed_data['Date']).dt.strftime('%Y-%m-%d')
+    processed_data.replace([np.inf, -np.inf], 0, inplace=True)
+    processed_data.fillna(0, inplace=True)
+    
+    result = processed_data[[
+        'Date', 'Cumulative_Market', 'Cumulative_Strategy', 'Signal', 'Z_Score'
     ]].to_dict(orient='records')
     
     return {

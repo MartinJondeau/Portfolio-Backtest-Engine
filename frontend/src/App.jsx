@@ -6,23 +6,31 @@ import LiveBadge from './LiveBadge' // Import the new component
 import './App.css'
 
 function App() {
-  const [ticker, setTicker] = useState('AAPL')
+  const [ticker, setTicker] = useState('NVDA')
   const [shortWindow, setShortWindow] = useState(20)
   const [longWindow, setLongWindow] = useState(50)
   const [data, setData] = useState([])
   const [metrics, setMetrics] = useState(null)
-  
-  // NEW: Tab State ('strategy' or 'asset')
+  const [strategy, setStrategy] = useState('SMA'); 
+  const [threshold, setThreshold] = useState(2.0); 
+  const [window, setWindow] = useState(20);        
   const [activeTab, setActiveTab] = useState('strategy')
   const [period, setPeriod] = useState('1y');     
   const [timeframe, setTimeframe] = useState('daily'); 
   const fetchData = async () => {
     try {
-      // Updated URL with new parameters
-      const response = await axios.get(`http://127.0.0.1:8001/api/backtest/sma/${ticker}?short_window=${shortWindow}&long_window=${longWindow}&period=${period}&timeframe=${timeframe}`)
+      let url = '';
+      
+      // Dynamic URL Construction based on Strategy
+      if (strategy === 'SMA') {
+        url = `http://127.0.0.1:8001/api/backtest/sma/${ticker}?short_window=${shortWindow}&long_window=${longWindow}&period=${period}&timeframe=${timeframe}`;
+      } else if (strategy === 'MeanReversion') {
+        url = `http://127.0.0.1:8001/api/backtest/mean-reversion/${ticker}?window=${window}&threshold=${threshold}&period=${period}&timeframe=${timeframe}`;
+      }
 
-      setData(response.data.data)
-      setMetrics(response.data.metrics)
+      const response = await axios.get(url);
+      setData(response.data.data);
+      setMetrics(response.data.metrics);
     } catch (error) {
       // NEW: Better error handling for our validation messages
       if (error.response && error.response.status === 400) {
@@ -44,32 +52,55 @@ function App() {
       </div>
       
       {/* 2. Controls Section */}
-      <div className="controls" style={{ display: 'flex', gap: '10px', marginBottom: '20px', padding: '15px', background: '#2a2a2a', borderRadius: '8px' }}>
+      <div className="controls" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px', padding: '15px', background: '#2a2a2a', borderRadius: '8px' }}>
+        
+        {/* Strategy Selector */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ fontSize: '10px', color: '#ccc' }}>Strategy</label>
+            <select 
+                value={strategy} 
+                onChange={(e) => setStrategy(e.target.value)}
+                style={{ padding: '8px', borderRadius: '4px', border: 'none', fontWeight: 'bold' }}
+            >
+                <option value="SMA">SMA Crossover</option>
+                <option value="MeanReversion">Mean Reversion</option>
+            </select>
+        </div>
+
         <input 
           value={ticker} 
           onChange={(e) => setTicker(e.target.value)} 
-          placeholder="Ticker (e.g. AAPL)" 
+          placeholder="Ticker" 
           style={{ padding: '8px', borderRadius: '4px', border: 'none' }}
         />
-        <div style={{ display: 'flex', gap: '5px', alignItems: 'center', color: 'white' }}>
-          <span style={{ fontSize: '12px' }}>Short:</span>
-          <input 
-            type="number" 
-            value={shortWindow} 
-            onChange={(e) => setShortWindow(e.target.value)} 
-            style={{ width: '50px', padding: '8px', borderRadius: '4px', border: 'none' }}
-          />
-        </div>
-        <div style={{ display: 'flex', gap: '5px', alignItems: 'center', color: 'white' }}>
-          <span style={{ fontSize: '12px' }}>Long:</span>
-          <input 
-            type="number" 
-            value={longWindow} 
-            onChange={(e) => setLongWindow(e.target.value)} 
-            style={{ width: '50px', padding: '8px', borderRadius: '4px', border: 'none' }}
-          />
-        </div>
-        {/* NEW: Period Selector */}
+
+        {/* CONDITIONAL INPUTS */}
+        {strategy === 'SMA' ? (
+            <>
+                {/* SMA Inputs */}
+                <div style={{ display: 'flex', gap: '5px', alignItems: 'center', color: 'white' }}>
+                    <span style={{ fontSize: '12px' }}>Short:</span>
+                    <input type="number" value={shortWindow} onChange={(e) => setShortWindow(e.target.value)} style={{ width: '50px', padding: '8px', borderRadius: '4px' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '5px', alignItems: 'center', color: 'white' }}>
+                    <span style={{ fontSize: '12px' }}>Long:</span>
+                    <input type="number" value={longWindow} onChange={(e) => setLongWindow(e.target.value)} style={{ width: '50px', padding: '8px', borderRadius: '4px' }} />
+                </div>
+            </>
+        ) : (
+            <>
+                {/* Mean Reversion Inputs */}
+                <div style={{ display: 'flex', gap: '5px', alignItems: 'center', color: 'white' }}>
+                    <span style={{ fontSize: '12px' }}>Window:</span>
+                    <input type="number" value={window} onChange={(e) => setWindow(e.target.value)} style={{ width: '50px', padding: '8px', borderRadius: '4px' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '5px', alignItems: 'center', color: 'white' }}>
+                    <span style={{ fontSize: '12px' }}>Z-Threshold:</span>
+                    <input type="number" step="0.1" value={threshold} onChange={(e) => setThreshold(e.target.value)} style={{ width: '50px', padding: '8px', borderRadius: '4px' }} />
+                </div>
+            </>
+        )}
+        {/* Period Selector */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
             <label style={{ fontSize: '10px', color: '#ccc' }}>Period</label>
             <select 
@@ -85,7 +116,7 @@ function App() {
             </select>
         </div>
 
-        {/* NEW: Timeframe Selector */}
+        {/*Timeframe Selector */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
             <label style={{ fontSize: '10px', color: '#ccc' }}>Timeframe</label>
             <select 

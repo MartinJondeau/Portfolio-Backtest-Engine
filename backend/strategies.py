@@ -39,6 +39,47 @@ def apply_sma_strategy(df, short_window=20, long_window=50):
     
     return data
 
+def apply_mean_reversion_strategy(df, window=20, threshold=2.0):
+    """
+    Mean Reversion Strategy based on Z-Score (Bollinger Band logic).
+    """
+    data = df.copy()
+    
+    # 1. Calculate Statistics
+    data['Moving_Avg'] = data['Close'].rolling(window=window).mean()
+    data['Std_Dev'] = data['Close'].rolling(window=window).std()
+    
+    # 2. Calculate Z-Score
+    # (Price - Mean) / Std_Dev
+    data['Z_Score'] = (data['Close'] - data['Moving_Avg']) / data['Std_Dev']
+    
+    # 3. Generate Signals
+    # If Z-Score < -Threshold (e.g. -2) -> Price is too cheap -> BUY (1)
+    # If Z-Score > Threshold (e.g. 2) -> Price is too expensive -> SHORT (-1)
+    # Otherwise -> Neutral (0)
+    data['Signal'] = 0
+    data.loc[data['Z_Score'] < -threshold, 'Signal'] = 1
+    data.loc[data['Z_Score'] > threshold, 'Signal'] = -1
+    
+    # 4. Calculate Returns
+    data['Market_Return'] = data['Close'].pct_change()
+    
+    # Clean Data (Sanitize)
+    data['Market_Return'].replace([np.inf, -np.inf], 0, inplace=True)
+    data['Market_Return'].fillna(0, inplace=True)
+    data.loc[data['Market_Return'] > 1.0, 'Market_Return'] = 0
+    data.loc[data['Market_Return'] < -0.99, 'Market_Return'] = 0
+
+    # Strategy Return: 
+    # Logic: We hold the position from the previous day
+    data['Strategy_Return'] = data['Signal'].shift(1) * data['Market_Return']
+    
+    # 5. Cumulative Returns
+    data['Cumulative_Market'] = (1 + data['Market_Return']).cumprod()
+    data['Cumulative_Strategy'] = (1 + data['Strategy_Return'].fillna(0)).cumprod()
+    
+    return data
+
 def calculate_performance_metrics(series):
     """
     Computes key financial metrics for a series of DAILY returns.
