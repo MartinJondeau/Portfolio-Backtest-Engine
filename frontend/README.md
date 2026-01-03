@@ -156,7 +156,7 @@ We follow a strict **Feature Branch Workflow**:
 ## 📝 License
 
 Project created for **ESILV - Financial Engineering (M.Eng)**.
-*Author: Adrien BAYRE*
+*Authors: Adrien BAYRE & Martin JONDEAU*
 
 ```
 
