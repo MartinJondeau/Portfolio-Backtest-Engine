@@ -2,12 +2,17 @@
 # Import other files
 from strategies import apply_sma_strategy, apply_mean_reversion_strategy, calculate_performance_metrics
 import time
+
 # Import libraries
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 import yfinance as yf
 import pandas as pd
 import numpy as np
+from report import generate_daily_report
+import json
+import os
+import glob
 app = FastAPI()
 
 # Allow React to talk to this API
@@ -196,3 +201,36 @@ def backtest_mean_reversion(
         "metrics": metrics,
         "data": result
     }
+
+@app.get("/api/reports/latest")
+def get_latest_report():
+    """
+    Scans the /reports folder and returns the most recent JSON file.
+    """
+    reports_dir = "reports"
+    
+    # Find all json files in the reports folder
+    list_of_files = glob.glob(f'{reports_dir}/*.json') 
+    
+    if not list_of_files:
+        raise HTTPException(status_code=404, detail="No reports found. Run daily_report.py first.")
+        
+    # Get the latest file based on creation time
+    latest_file = max(list_of_files, key=os.path.getctime)
+    
+    # Read and return content
+    with open(latest_file, 'r') as f:
+        data = json.load(f)
+        
+    return data
+
+@app.post("/api/reports/generate")
+def trigger_daily_report(background_tasks: BackgroundTasks):
+    """
+    Triggers the report generation in the background.
+    The server responds immediately with "Accepted", 
+    while the script runs silently.
+    """
+    background_tasks.add_task(generate_daily_report)
+    
+    return {"status": "Report generation started", "message": "Check back in 10-20 seconds"}
