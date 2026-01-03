@@ -118,10 +118,23 @@ function App() {
       </div>
 
       {/* Content - Full Width */}
-      <div style={{ flex: 1, width: '100%', overflowY: 'auto' }}>
-        {activeTab === 'single' && <SingleAssetView />}
-        {activeTab === 'strategies' && <StrategiesView />}
-        {activeTab === 'portfolio' && <PortfolioView />}
+      <div style={{ flex: 1, width: '100%', overflowY: 'auto', position: 'relative' }}>
+        
+        {/* 1. MARKET OVERVIEW (Always mounted, hidden if inactive) */}
+        <div style={{ display: activeTab === 'single' ? 'block' : 'none', height: '100%' }}>
+          <SingleAssetView />
+        </div>
+
+        {/* 2. STRATEGIES (Always mounted, hidden if inactive) */}
+        <div style={{ display: activeTab === 'strategies' ? 'block' : 'none', height: '100%' }}>
+          <StrategiesView />
+        </div>
+
+        {/* 3. PORTFOLIO (Always mounted, hidden if inactive) */}
+        <div style={{ display: activeTab === 'portfolio' ? 'block' : 'none', height: '100%' }}>
+          <PortfolioView />
+        </div>
+
       </div>
 
       {/* Footer */}
@@ -141,33 +154,39 @@ function App() {
 }
 
 // ========================================
-// 1. WATCHLIST / MARKET OVERVIEW
+// 1. WATCHLIST / MARKET OVERVIEW (Ordered & Color-Locked)
 // ========================================
 function SingleAssetView() {
-  // State
-  const [watchlist, setWatchlist] = useState(['AAPL', 'NVDA', 'BTC-USD', 'SPY'])
-  const [period, setPeriod] = useState('1y')
-  const [newTicker, setNewTicker] = useState('')
-  
-  // Data Store: { "AAPL": { data: [...], stats: {...} }, "NVDA": ... }
-  const [assetsData, setAssetsData] = useState({})
-  const [loading, setLoading] = useState(false)
-
-  // Neon Color Palette to cycle through
+  // Neon Color Palette
   const colors = ['#ff8c00', '#00ff88', '#00d4ff', '#ff4444', '#d264ff', '#ffff00']
 
-  // Fetch logic
-  const fetchAllAssets = async () => {
-    setLoading(true)
-    const newData = {}
+  // STATE: Now stores objects { symbol: 'AAPL', color: '...' } to lock colors
+  const [watchlist, setWatchlist] = useState([
+    { symbol: 'AAPL', color: colors[0] },
+    { symbol: 'NVDA', color: colors[1] },
+    { symbol: 'BTC-USD', color: colors[2] },
+    { symbol: 'SPY', color: colors[3] }
+  ])
+  
+  const [period, setPeriod] = useState('1y')
+  const [newTicker, setNewTicker] = useState('')
+  const [assetsData, setAssetsData] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState(null)
 
-    // We fetch all tickers in parallel
-    await Promise.all(watchlist.map(async (ticker) => {
+  // --- FETCHING LOGIC ---
+  const fetchAllAssets = async () => {
+    if (Object.keys(assetsData).length === 0) setLoading(true)
+    
+    const newData = { ...assetsData }
+
+    // Loop through the objects in the watchlist
+    for (const item of watchlist) {
+      const ticker = item.symbol
       try {
         const response = await axios.get(`http://127.0.0.1:8001/api/asset/${ticker}?period=${period}`)
         const rawData = response.data
         
-        // Calculate Stats
         const prices = rawData.map(d => d.Close)
         const last = prices[prices.length - 1]
         const first = prices[0]
@@ -183,30 +202,48 @@ function SingleAssetView() {
             isPositive: change >= 0
           }
         }
+        
+        setAssetsData({ ...newData })
+        await new Promise(r => setTimeout(r, 200)); 
+
       } catch (err) {
         console.error(`Failed to fetch ${ticker}`, err)
       }
-    }))
+    }
 
-    setAssetsData(newData)
+    setLastUpdated(new Date().toLocaleTimeString())
     setLoading(false)
   }
 
-  // Refetch when watchlist or period changes
+  // --- AUTO-REFRESH ---
   useEffect(() => {
-    fetchAllAssets()
-  }, [period, watchlist]) // <--- Dependency array triggers update
+    fetchAllAssets();
+    const interval = setInterval(() => fetchAllAssets(), 300000); 
+    return () => clearInterval(interval);
+  }, [period, watchlist]);
 
+  // --- ADD TICKER (PREPEND + ASSIGN COLOR) ---
   const handleAddTicker = () => {
-    if (newTicker && !watchlist.includes(newTicker.toUpperCase())) {
-      setWatchlist([...watchlist, newTicker.toUpperCase()])
+    const upperTicker = newTicker.toUpperCase().trim()
+    
+    // Check for duplicates
+    if (upperTicker && !watchlist.some(item => item.symbol === upperTicker)) {
+      
+      // 1. Pick the next color in the cycle based on current length
+      const nextColor = colors[watchlist.length % colors.length]
+      
+      // 2. Create the new object
+      const newItem = { symbol: upperTicker, color: nextColor }
+      
+      // 3. PREPEND: Add to the START of the array
+      setWatchlist([newItem, ...watchlist])
+      
       setNewTicker('')
     }
   }
 
   const handleRemoveTicker = (tickerToRemove) => {
-    setWatchlist(watchlist.filter(t => t !== tickerToRemove))
-    // Also remove data to clean up memory
+    setWatchlist(watchlist.filter(t => t.symbol !== tickerToRemove))
     const newData = { ...assetsData }
     delete newData[tickerToRemove]
     setAssetsData(newData)
@@ -217,19 +254,10 @@ function SingleAssetView() {
       
       {/* --- TOP: PARAMETERS --- */}
       <div style={{ 
-        background: '#1a1a1a', 
-        padding: '20px', 
-        borderRadius: '8px', 
-        marginBottom: '30px',
-        border: '1px solid #333',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '20px',
-        alignItems: 'center',
-        justifyContent: 'space-between'
+        background: '#1a1a1a', padding: '20px', borderRadius: '8px', marginBottom: '30px',
+        border: '1px solid #333', display: 'flex', flexWrap: 'wrap', gap: '20px',
+        alignItems: 'center', justifyContent: 'space-between'
       }}>
-        
-        {/* Left: Watchlist Controls */}
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <h3 style={{ margin: 0, color: '#ff8c00', fontSize: '14px', textTransform: 'uppercase' }}>Watchlist:</h3>
           <input 
@@ -237,15 +265,11 @@ function SingleAssetView() {
             onChange={(e) => setNewTicker(e.target.value)} 
             onKeyDown={(e) => e.key === 'Enter' && handleAddTicker()}
             placeholder="ADD TICKER..."
-            style={{ 
-              background: '#000', border: '1px solid #555', color: 'white', 
-              padding: '8px', borderRadius: '4px', outline: 'none', width: '120px' 
-            }}
+            style={{ background: '#000', border: '1px solid #555', color: 'white', padding: '8px', borderRadius: '4px', outline: 'none', width: '120px' }}
           />
           <button onClick={handleAddTicker} style={{ cursor: 'pointer', background: '#333', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px', fontWeight: 'bold' }}>+</button>
         </div>
 
-        {/* Right: Period Selector */}
         <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
            <span style={{ color: '#888', fontSize: '12px', marginRight: '5px' }}>PERIOD:</span>
            {['1mo', '3mo', '6mo', '1y', '2y', '5y'].map(p => (
@@ -267,48 +291,43 @@ function SingleAssetView() {
                {p}
              </button>
            ))}
-           {loading && <span style={{ marginLeft: '15px', color: '#ff8c00', fontSize: '12px' }}>Updating...</span>}
+           <div style={{ marginLeft: '15px', fontSize: '10px', color: '#666', textAlign: 'right' }}>
+              {loading ? <span style={{color: '#ff8c00'}}>UPDATING...</span> : <span>UPDATED: {lastUpdated}</span>}
+           </div>
         </div>
       </div>
 
       {/* --- BOTTOM: 2-COLUMN GRID --- */}
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fill, minmax(600px, 1fr))', // Responsive 2 columns
+        gridTemplateColumns: 'repeat(auto-fill, minmax(600px, 1fr))', 
         gap: '25px' 
       }}>
-        {watchlist.map((ticker, index) => {
-          const asset = assetsData[ticker]
-          const color = colors[index % colors.length] // Cycle colors
+        {watchlist.map((item) => {
+          // Destructure object: symbol and fixed color
+          const ticker = item.symbol
+          const color = item.color 
           
-          if (!asset) return null // Skip if loading
+          const asset = assetsData[ticker]
+          
+          if (!asset) return null 
 
           return (
             <div key={ticker} className="bloomberg-panel" style={{ 
-              background: '#111', 
-              border: '1px solid #333', 
-              borderRadius: '6px',
-              position: 'relative',
-              overflow: 'hidden'
+              background: '#111', border: '1px solid #333', borderRadius: '6px',
+              position: 'relative', overflow: 'hidden'
             }}>
               
-              {/* Card Header */}
+              {/* Header with Fixed Color */}
               <div style={{ 
-                padding: '15px 20px', 
-                borderBottom: '1px solid #222', 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
+                padding: '15px 20px', borderBottom: '1px solid #222', 
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 background: `linear-gradient(90deg, ${color}10, transparent)` 
               }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <h3 style={{ margin: 0, color: color, fontSize: '22px', fontWeight: '900' }}>{ticker}</h3>
-                    <span style={{ 
-                      fontSize: '14px', 
-                      fontWeight: 'bold', 
-                      color: asset.stats.isPositive ? '#00ff88' : '#ff4444' 
-                    }}>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold', color: asset.stats.isPositive ? '#00ff88' : '#ff4444' }}>
                       {asset.stats.isPositive ? '▲' : '▼'} {asset.stats.change}%
                     </span>
                   </div>
@@ -317,23 +336,16 @@ function SingleAssetView() {
                   </div>
                 </div>
                 
-                {/* Stats Mini-Column */}
                 <div style={{ textAlign: 'right', fontSize: '11px', color: '#888' }}>
                   <div>HIGH: <span style={{ color: '#eee' }}>${asset.stats.high}</span></div>
                   <div style={{ marginTop: '2px' }}>LOW: <span style={{ color: '#eee' }}>${asset.stats.low}</span></div>
-                  <button 
-                    onClick={() => handleRemoveTicker(ticker)}
-                    style={{ 
-                      marginTop: '5px', background: 'none', border: 'none', color: '#444', 
-                      cursor: 'pointer', fontSize: '10px', textDecoration: 'underline' 
-                    }}
-                  >
+                  <button onClick={() => handleRemoveTicker(ticker)} style={{ marginTop: '5px', background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: '10px', textDecoration: 'underline' }}>
                     REMOVE
                   </button>
                 </div>
               </div>
 
-              {/* Chart Area */}
+              {/* Chart */}
               <div style={{ height: '300px', width: '100%', padding: '10px' }}>
                 <ResponsiveContainer>
                   <AreaChart data={asset.data}>
@@ -344,31 +356,10 @@ function SingleAssetView() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
-                    <XAxis 
-                        dataKey="Date" hide={true} // Clean look
-                    />
-                    <YAxis 
-                        domain={['auto', 'auto']} 
-                        hide={false} 
-                        orientation="right" 
-                        tick={{fill: '#444', fontSize: 10}}
-                        axisLine={false}
-                        tickLine={false}
-                    />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#000', border: `1px solid ${color}` }}
-                      itemStyle={{ color: color }}
-                      labelStyle={{ color: '#888' }}
-                      formatter={(val) => [`$${val.toFixed(2)}`, 'Price']}
-                      labelFormatter={(label) => new Date(label).toLocaleDateString()}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="Close" 
-                      stroke={color} 
-                      strokeWidth={2} 
-                      fill={`url(#grad${ticker})`} 
-                    />
+                    <XAxis dataKey="Date" hide={true} />
+                    <YAxis domain={['auto', 'auto']} hide={false} orientation="right" tick={{fill: '#444', fontSize: 10}} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ backgroundColor: '#000', border: `1px solid ${color}` }} itemStyle={{ color: color }} labelStyle={{ color: '#888' }} formatter={(val) => [`$${val.toFixed(2)}`, 'Price']} labelFormatter={(label) => new Date(label).toLocaleDateString()} />
+                    <Area type="monotone" dataKey="Close" stroke={color} strokeWidth={2} fill={`url(#grad${ticker})`} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -379,7 +370,6 @@ function SingleAssetView() {
     </div>
   )
 }
-
 
 // ========================================
 // 2. STRATEGIES VIEW (Quant A - Advanced)
