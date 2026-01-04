@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
@@ -10,6 +10,22 @@ function PortfolioView() {
   const [correlation, setCorrelation] = useState(null)
   const [metrics, setMetrics] = useState(null)
   const [rebalanceFreq, setRebalanceFreq] = useState('never')
+  const [period, setPeriod] = useState('2y')
+  const [weightStrategy, setWeightStrategy] = useState('equal')
+  const [customWeights, setCustomWeights] = useState({})
+  const [isAutoRefresh, setIsAutoRefresh] = useState(true)
+  const [lastUpdated, setLastUpdated] = useState(null)
+
+  // Initialize custom weights when tickers change
+  useEffect(() => {
+    const equalWeight = (100 / tickers.length).toFixed(1)
+    const newWeights = {}
+    tickers.forEach(ticker => {
+      newWeights[ticker] = customWeights[ticker] !== undefined ? customWeights[ticker] : parseFloat(equalWeight)
+    })
+    setCustomWeights(newWeights)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tickers])
 
   const addTicker = () => {
     if (newTicker && !tickers.includes(newTicker.toUpperCase())) {
@@ -20,9 +36,71 @@ function PortfolioView() {
 
   const removeTicker = (tickerToRemove) => {
     if (tickers.length > 3) {
-      setTickers(tickers.filter(t => t !== tickerToRemove))
+      const newTickers = tickers.filter(t => t !== tickerToRemove)
+      setTickers(newTickers)
+
+      // Remove from custom weights
+      const newWeights = { ...customWeights }
+      delete newWeights[tickerToRemove]
+      setCustomWeights(newWeights)
     } else {
       alert('MINIMUM 3 TICKERS REQUIRED')
+    }
+  }
+
+  const handleWeightChange = (ticker, value) => {
+    setCustomWeights({
+      ...customWeights,
+      [ticker]: parseFloat(value) || 0
+    })
+  }
+
+  const getTotalWeight = () => {
+    return Object.values(customWeights).reduce((sum, weight) => sum + weight, 0)
+  }
+
+  const normalizeWeights = () => {
+    const total = getTotalWeight()
+    if (total === 0) return
+
+    const normalized = {}
+    Object.keys(customWeights).forEach(ticker => {
+      normalized[ticker] = (customWeights[ticker] / total) * 100
+    })
+    setCustomWeights(normalized)
+  }
+
+  const runBacktest = async () => {
+    try {
+      // Prepare weights based on strategy
+      let weights = null
+      if (weightStrategy === 'custom') {
+        const total = getTotalWeight()
+        if (Math.abs(total - 100) > 0.1) {
+          alert(`WEIGHT SUM = ${total.toFixed(1)}%. MUST EQUAL 100%`)
+          return
+        }
+
+        // Convert to decimal format for backend
+        weights = {}
+        Object.keys(customWeights).forEach(ticker => {
+          weights[ticker] = customWeights[ticker] / 100
+        })
+      }
+
+      const response = await axios.post('http://127.0.0.1:8001/api/portfolio/backtest', {
+        tickers: tickers,
+        weights: weights,
+        rebalance_frequency: rebalanceFreq,
+        period: period
+      })
+      setPortfolioData(response.data.portfolio_data)
+      setMetrics(response.data.metrics)
+      setIndividualAssets(response.data.individual_assets)
+      setLastUpdated(new Date().toLocaleTimeString())
+    } catch (error) {
+      console.error('Error:', error)
+      alert('CONNECTION ERROR')
     }
   }
 
@@ -30,7 +108,7 @@ function PortfolioView() {
     try {
       const response = await axios.post('http://127.0.0.1:8001/api/portfolio/correlation', {
         tickers: tickers,
-        period: '1y'
+        period: period
       })
       setCorrelation(response.data)
     } catch (error) {
@@ -39,61 +117,82 @@ function PortfolioView() {
     }
   }
 
-  const runBacktest = async () => {
-  try {
-    const response = await axios.post('http://127.0.0.1:8001/api/portfolio/backtest', {
-      tickers: tickers,
-      weights: null,
-      rebalance_frequency: rebalanceFreq,
-      period: '2y'
-    })
-    setPortfolioData(response.data.portfolio_data)
-    setMetrics(response.data.metrics)
-    setIndividualAssets(response.data.individual_assets)  // NOUVEAU
-  } catch (error) {
-    console.error('Error:', error)
-    alert('CONNECTION ERROR')
-  }
-}
+  // Auto-refresh every 5 minutes
+  useEffect(() => {
+    let interval = null
+    if (isAutoRefresh && portfolioData.length > 0) {
+      interval = setInterval(() => {
+        console.log("🔄 Auto-refresh triggered...")
+        runBacktest()
+      }, 300000) // 5 minutes
+    }
+    return () => { if (interval) clearInterval(interval) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAutoRefresh, portfolioData.length])
 
   return (
     <div style={{ padding: '40px', width: '100%', maxWidth: '1600px', margin: '0 auto' }}>
       {/* Section Header */}
-      <div style={{ marginBottom: '35px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-        <div style={{
-          width: '5px',
-          height: '30px',
-          background: '#ff8c00',
-          boxShadow: '0 0 10px rgba(255, 140, 0, 0.5)'
-        }}></div>
-        <h2 style={{ 
-          fontSize: '20px', 
-          fontWeight: '900', 
-          color: '#ff8c00',
-          letterSpacing: '3px',
-          textTransform: 'uppercase',
-          margin: 0
-        }}>
-          PORTFOLIO ANALYSIS
-        </h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div style={{
+            width: '5px',
+            height: '30px',
+            background: '#ff8c00',
+            boxShadow: '0 0 10px rgba(255, 140, 0, 0.5)'
+          }}></div>
+          <div>
+            <h2 style={{
+              fontSize: '20px',
+              fontWeight: '900',
+              color: '#ff8c00',
+              letterSpacing: '3px',
+              textTransform: 'uppercase',
+              margin: 0
+            }}>
+              PORTFOLIO ANALYSIS
+            </h2>
+            {lastUpdated && (
+              <div style={{ fontSize: '10px', color: '#666', marginTop: '5px' }}>
+                Last Updated: {lastUpdated}
+              </div>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={() => setIsAutoRefresh(!isAutoRefresh)}
+          style={{
+            background: 'rgba(255, 140, 0, 0.1)',
+            border: '1px solid #ff8c00',
+            color: '#ff8c00',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            padding: '8px 16px',
+            fontSize: '10px',
+            fontWeight: '700',
+            letterSpacing: '1px'
+          }}
+        >
+          {isAutoRefresh ? '⏸️ PAUSE' : '▶️ RESUME'}
+        </button>
       </div>
-      
+
       {/* Ticker Selection Panel */}
       <div className="bloomberg-panel" style={{ padding: '30px', marginBottom: '30px' }}>
-        <h3 style={{ 
-          fontSize: '12px', 
-          color: '#ff8c00', 
-          fontWeight: '800', 
-          letterSpacing: '2px', 
+        <h3 style={{
+          fontSize: '12px',
+          color: '#ff8c00',
+          fontWeight: '800',
+          letterSpacing: '2px',
           marginBottom: '20px',
           textTransform: 'uppercase'
         }}>
           ASSET SELECTION (MIN 3)
         </h3>
-        
+
         <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', flexWrap: 'wrap' }}>
-          <input 
-            value={newTicker} 
+          <input
+            value={newTicker}
             onChange={(e) => setNewTicker(e.target.value.toUpperCase())}
             placeholder="TICKER"
             onKeyPress={(e) => e.key === 'Enter' && addTicker()}
@@ -104,10 +203,10 @@ function PortfolioView() {
             ADD ASSET
           </button>
         </div>
-        
+
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           {tickers.map(ticker => (
-            <div key={ticker} className="ticker-tag" style={{ 
+            <div key={ticker} className="ticker-tag" style={{
               padding: '12px 18px',
               display: 'flex',
               alignItems: 'center',
@@ -118,9 +217,9 @@ function PortfolioView() {
               position: 'relative'
             }}>
               <span>{ticker}</span>
-              <button 
+              <button
                 onClick={() => removeTicker(ticker)}
-                style={{ 
+                style={{
                   background: 'none',
                   border: 'none',
                   color: '#ff4444',
@@ -140,10 +239,106 @@ function PortfolioView() {
         </div>
       </div>
 
+      {/* Weight Configuration Panel */}
+      {weightStrategy === 'custom' && (
+        <div className="bloomberg-panel" style={{ padding: '30px', marginBottom: '30px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{
+              fontSize: '12px',
+              color: '#ff8c00',
+              fontWeight: '800',
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+              margin: 0
+            }}>
+              CUSTOM WEIGHTS
+            </h3>
+            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+              <span style={{
+                fontSize: '11px',
+                color: getTotalWeight() === 100 ? '#00ff88' : '#ff4444',
+                fontWeight: '800',
+                fontFamily: 'Consolas, monospace'
+              }}>
+                TOTAL: {getTotalWeight().toFixed(1)}%
+              </span>
+              <button
+                onClick={normalizeWeights}
+                className="controls"
+                style={{ padding: '6px 12px', fontSize: '10px' }}
+              >
+                NORMALIZE
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+            {tickers.map(ticker => (
+              <div key={ticker} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label style={{
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    color: '#ff8c00',
+                    textTransform: 'uppercase'
+                  }}>
+                    {ticker}
+                  </label>
+                  <span style={{
+                    fontSize: '14px',
+                    fontWeight: '900',
+                    color: '#00d4ff',
+                    fontFamily: 'Consolas, monospace'
+                  }}>
+                    {customWeights[ticker]?.toFixed(1)}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={customWeights[ticker] || 0}
+                  onChange={(e) => handleWeightChange(ticker, e.target.value)}
+                  style={{
+                    width: '100%',
+                    height: '4px',
+                    background: '#222',
+                    outline: 'none',
+                    accentColor: '#ff8c00'
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Controls */}
       <div style={{ display: 'flex', gap: '15px', marginBottom: '35px', flexWrap: 'wrap' }}>
-        <select 
-          value={rebalanceFreq} 
+        <select
+          value={weightStrategy}
+          onChange={(e) => setWeightStrategy(e.target.value)}
+          className="controls"
+        >
+          <option value="equal">EQUAL WEIGHT</option>
+          <option value="custom">CUSTOM WEIGHTS</option>
+        </select>
+
+        <select
+          value={period}
+          onChange={(e) => setPeriod(e.target.value)}
+          className="controls"
+        >
+          <option value="1mo">1 MONTH</option>
+          <option value="6mo">6 MONTHS</option>
+          <option value="1y">1 YEAR</option>
+          <option value="2y">2 YEARS</option>
+          <option value="5y">5 YEARS</option>
+        </select>
+
+        <select
+          value={rebalanceFreq}
           onChange={(e) => setRebalanceFreq(e.target.value)}
           className="controls"
         >
@@ -152,11 +347,11 @@ function PortfolioView() {
           <option value="quarterly">QUARTERLY</option>
           <option value="yearly">YEARLY</option>
         </select>
-        
+
         <button onClick={fetchCorrelation} className="controls">
           CORRELATION
         </button>
-        
+
         <button onClick={runBacktest} className="controls">
           EXECUTE
         </button>
@@ -175,9 +370,9 @@ function PortfolioView() {
       {/* Correlation Matrix */}
       {correlation && (
         <div className="bloomberg-panel" style={{ padding: '30px', marginBottom: '35px' }}>
-          <h3 style={{ 
-            fontSize: '13px', 
-            fontWeight: '800', 
+          <h3 style={{
+            fontSize: '13px',
+            fontWeight: '800',
             color: '#ff8c00',
             letterSpacing: '2px',
             marginBottom: '25px',
@@ -190,65 +385,65 @@ function PortfolioView() {
       )}
 
       {/* Chart */}
-{portfolioData.length > 0 && (
-  <div className="bloomberg-panel" style={{ padding: '30px' }}>
-    <h3 style={{ 
-      fontSize: '13px', 
-      fontWeight: '800', 
-      color: '#ff8c00',
-      letterSpacing: '2px',
-      marginBottom: '25px',
-      textTransform: 'uppercase'
-    }}>
-      PORTFOLIO CUMULATIVE PERFORMANCE
-    </h3>
-    <div style={{ width: '100%', height: 450 }}>
-      <ResponsiveContainer>
-        <LineChart data={portfolioData.map((row, index) => {
-          const enrichedRow = { ...row }
-          // Add individual asset data for this date
-          Object.keys(individualAssets).forEach(ticker => {
-            enrichedRow[ticker] = individualAssets[ticker][index]
-          })
-          return enrichedRow
-        })}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-          <XAxis dataKey="Date" stroke="#777" />
-          <YAxis stroke="#777" />
-          <Tooltip />
-          <Legend />
-          
-          {/* Portfolio Line - Bold Orange */}
-          <Line type="monotone" dataKey="Portfolio_Cumulative" name="PORTFOLIO" stroke="#ff8c00" dot={false} strokeWidth={4} />
-          
-          {/* Individual Asset Lines - Thinner, Different Colors */}
-          {Object.keys(individualAssets).map((ticker, index) => {
-            const colors = ['#00d4ff', '#00ff88', '#a855f7', '#fbbf24', '#ec4899']
-            return (
-              <Line 
-                key={ticker}
-                type="monotone" 
-                dataKey={ticker} 
-                name={ticker} 
-                stroke={colors[index % colors.length]} 
-                dot={false} 
-                strokeWidth={2}
-                strokeDasharray="5 5"
-              />
-            )
-          })}
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  </div>
-)}
+      {portfolioData.length > 0 && (
+        <div className="bloomberg-panel" style={{ padding: '30px' }}>
+          <h3 style={{
+            fontSize: '13px',
+            fontWeight: '800',
+            color: '#ff8c00',
+            letterSpacing: '2px',
+            marginBottom: '25px',
+            textTransform: 'uppercase'
+          }}>
+            PORTFOLIO CUMULATIVE PERFORMANCE
+          </h3>
+          <div style={{ width: '100%', height: 450 }}>
+            <ResponsiveContainer>
+              <LineChart data={portfolioData.map((row, index) => {
+                const enrichedRow = { ...row }
+                // Add individual asset data for this date
+                Object.keys(individualAssets).forEach(ticker => {
+                  enrichedRow[ticker] = individualAssets[ticker][index]
+                })
+                return enrichedRow
+              })}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+                <XAxis dataKey="Date" stroke="#777" />
+                <YAxis stroke="#777" />
+                <Tooltip />
+                <Legend />
+
+                {/* Portfolio Line - Bold Orange */}
+                <Line type="monotone" dataKey="Portfolio_Cumulative" name="PORTFOLIO" stroke="#ff8c00" dot={false} strokeWidth={4} />
+
+                {/* Individual Asset Lines - Thinner, Different Colors */}
+                {Object.keys(individualAssets).map((ticker, index) => {
+                  const colors = ['#00d4ff', '#00ff88', '#a855f7', '#fbbf24', '#ec4899']
+                  return (
+                    <Line
+                      key={ticker}
+                      type="monotone"
+                      dataKey={ticker}
+                      name={ticker}
+                      stroke={colors[index % colors.length]}
+                      dot={false}
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                    />
+                  )
+                })}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 function MetricCard({ title, value, color }) {
   return (
-    <div className="metric-card bloomberg-panel" style={{ 
+    <div className="metric-card bloomberg-panel" style={{
       padding: '25px',
       position: 'relative',
       overflow: 'hidden'
@@ -262,20 +457,20 @@ function MetricCard({ title, value, color }) {
         background: `radial-gradient(circle, ${color}15, transparent)`,
         pointerEvents: 'none'
       }}></div>
-      <div style={{ 
-        fontSize: '10px', 
-        color: '#666', 
-        fontWeight: '800', 
-        letterSpacing: '2px', 
+      <div style={{
+        fontSize: '10px',
+        color: '#666',
+        fontWeight: '800',
+        letterSpacing: '2px',
         marginBottom: '12px',
         textTransform: 'uppercase'
       }}>
         {title}
       </div>
-      <div style={{ 
-        fontSize: '32px', 
-        fontWeight: '900', 
-        color: color, 
+      <div style={{
+        fontSize: '32px',
+        fontWeight: '900',
+        color: color,
         fontFamily: 'Consolas, monospace',
         textShadow: `0 0 15px ${color}40`
       }}>
@@ -305,13 +500,13 @@ function CorrelationMatrix({ data, tickers }) {
       <table style={{ width: '100%' }}>
         <thead>
           <tr>
-            <th style={{ 
-              padding: '15px', 
+            <th style={{
+              padding: '15px',
               fontSize: '11px',
               textAlign: 'left'
             }}></th>
             {tickers.map(ticker => (
-              <th key={ticker} style={{ 
+              <th key={ticker} style={{
                 padding: '15px',
                 fontSize: '11px',
                 textAlign: 'center'
@@ -324,7 +519,7 @@ function CorrelationMatrix({ data, tickers }) {
         <tbody>
           {data.map(row => (
             <tr key={row.asset}>
-              <td style={{ 
+              <td style={{
                 padding: '15px',
                 fontWeight: '800',
                 fontSize: '11px'
@@ -334,7 +529,7 @@ function CorrelationMatrix({ data, tickers }) {
               {tickers.map(ticker => {
                 const value = row[ticker]
                 return (
-                  <td key={ticker} style={{ 
+                  <td key={ticker} style={{
                     padding: '15px',
                     textAlign: 'center',
                     color: getColor(value),
