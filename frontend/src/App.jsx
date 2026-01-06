@@ -67,7 +67,7 @@ function App() {
               fontFamily: 'Consolas, monospace',
               textShadow: '0 0 10px rgba(255, 140, 0, 0.5)'
             }}>
-              BLOOMBERG TERMINAL
+              HADES ANALYTICS
             </h1>
             <p style={{
               margin: '5px 0 0 0',

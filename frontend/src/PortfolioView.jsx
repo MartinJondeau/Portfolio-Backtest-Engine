@@ -15,6 +15,7 @@ function PortfolioView() {
   const [customWeights, setCustomWeights] = useState({})
   const [isAutoRefresh, setIsAutoRefresh] = useState(true)
   const [lastUpdated, setLastUpdated] = useState(null)
+  const [assetStrategies, setAssetStrategies] = useState({})
 
   // Initialize custom weights when tickers change
   useEffect(() => {
@@ -71,8 +72,44 @@ function PortfolioView() {
   }
 
   const runBacktest = async () => {
-    try {
-      // Prepare weights based on strategy
+  try {
+    // Check if using individual strategies
+    const useIndividualStrategies = Object.keys(assetStrategies).length > 0
+    
+    if (useIndividualStrategies) {
+      // Build assets config
+      const assets = tickers.map(ticker => ({
+        ticker: ticker,
+        strategy: assetStrategies[ticker]?.strategy || 'buy_hold',
+        params: assetStrategies[ticker]?.params || {}
+      }))
+      
+      // Prepare weights
+      let weightsPayload = null
+      if (weightStrategy === 'custom') {
+        const total = getTotalWeight()
+        if (Math.abs(total - 100) > 0.1) {
+          alert(`WEIGHT SUM = ${total.toFixed(1)}%. MUST EQUAL 100%`)
+          return
+        }
+        weightsPayload = {}
+        Object.keys(customWeights).forEach(ticker => {
+          weightsPayload[ticker] = customWeights[ticker] / 100
+        })
+      }
+      
+      const response = await axios.post('http://127.0.0.1:8001/api/portfolio/backtest-strategies', {
+        assets: assets,
+        period: period,
+        weights: weightsPayload
+      })
+      
+      setPortfolioData(response.data.portfolio_data)
+      setMetrics(response.data.metrics)
+      setIndividualAssets(response.data.individual_assets)
+      setLastUpdated(new Date().toLocaleTimeString())
+    } else {
+      // Original backtest logic (equal weight or custom weight, no strategies)
       let weights = null
       if (weightStrategy === 'custom') {
         const total = getTotalWeight()
@@ -80,8 +117,6 @@ function PortfolioView() {
           alert(`WEIGHT SUM = ${total.toFixed(1)}%. MUST EQUAL 100%`)
           return
         }
-
-        // Convert to decimal format for backend
         weights = {}
         Object.keys(customWeights).forEach(ticker => {
           weights[ticker] = customWeights[ticker] / 100
@@ -98,11 +133,20 @@ function PortfolioView() {
       setMetrics(response.data.metrics)
       setIndividualAssets(response.data.individual_assets)
       setLastUpdated(new Date().toLocaleTimeString())
-    } catch (error) {
-      console.error('Error:', error)
-      alert('CONNECTION ERROR')
     }
+  } catch (error) {
+    console.error('Error:', error)
+    alert('CONNECTION ERROR')
   }
+}
+
+const handleStrategyChange = (ticker, strategy, params = {}) => {
+  setAssetStrategies({
+    ...assetStrategies,
+    [ticker]: { strategy, params }
+  })
+}
+
 
   const fetchCorrelation = async () => {
     try {
@@ -314,46 +358,439 @@ function PortfolioView() {
         </div>
       )}
 
+{/* Strategy Selection Panel */}
+<div className="bloomberg-panel" style={{ padding: '30px', marginBottom: '30px' }}>
+  <h3 style={{
+    fontSize: '12px',
+    color: '#ff8c00',
+    fontWeight: '800',
+    letterSpacing: '2px',
+    marginBottom: '20px',
+    textTransform: 'uppercase'
+  }}>
+    STRATEGY PER ASSET (OPTIONAL)
+  </h3>
+  
+  {tickers.map(ticker => (
+    <div key={ticker} style={{ 
+      marginBottom: '20px',
+      padding: '15px',
+      background: 'rgba(255, 140, 0, 0.05)',
+      border: '1px solid rgba(255, 140, 0, 0.2)',
+      borderRadius: '4px'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>
+        <span style={{
+          color: '#ff8c00',
+          fontWeight: '800',
+          width: '80px',
+          fontSize: '12px',
+          letterSpacing: '1px'
+        }}>{ticker}</span>
+        <div style={{ position: 'relative', flex: 1 }}>
+          <select
+            value={assetStrategies[ticker]?.strategy || 'buy_hold'}
+            onChange={(e) => {
+              const strategy = e.target.value
+              if (strategy === 'buy_hold') {
+                handleStrategyChange(ticker, strategy, {})
+              } else if (strategy === 'sma') {
+                handleStrategyChange(ticker, strategy, { short_window: 20, long_window: 50 })
+              } else if (strategy === 'mean_reversion') {
+                handleStrategyChange(ticker, strategy, { window: 20, threshold: 2.0 })
+              }
+            }}
+            style={{
+              minWidth: '220px',
+              width: '100%',
+              backgroundColor: '#0f0f0f',
+              border: '2px solid #444',
+              borderLeft: '3px solid #00d4ff',
+              color: '#d4d4d4',
+              padding: '10px 35px 10px 15px',
+              borderRadius: '2px',
+              fontSize: '11px',
+              fontFamily: 'Consolas, monospace',
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+              fontWeight: '700',
+              letterSpacing: '0.5px',
+              appearance: 'none',
+              transition: 'all 0.3s',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.borderColor = '#00d4ff'
+              e.target.style.boxShadow = '0 0 15px rgba(0, 212, 255, 0.3)'
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.borderColor = '#444'
+              e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3)'
+            }}
+          >
+            <option value="buy_hold">💼 BUY & HOLD</option>
+            <option value="sma">📊 SMA CROSSOVER</option>
+            <option value="mean_reversion">🔄 MEAN REVERSION</option>
+          </select>
+          <div style={{
+            position: 'absolute',
+            right: '12px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            pointerEvents: 'none',
+            color: '#00d4ff',
+            fontSize: '10px'
+          }}>▼</div>
+        </div>
+      </div>
+      
+      {/* Strategy Parameters */}
+      {assetStrategies[ticker]?.strategy === 'sma' && (
+        <div style={{ display: 'flex', gap: '10px', marginLeft: '95px', marginTop: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <label style={{ fontSize: '9px', color: '#888', letterSpacing: '1px', fontWeight: '700' }}>SHORT</label>
+            <input
+              type="number"
+              value={assetStrategies[ticker]?.params?.short_window || 20}
+              onChange={(e) => handleStrategyChange(ticker, 'sma', {
+                ...assetStrategies[ticker].params,
+                short_window: parseInt(e.target.value)
+              })}
+              style={{
+                width: '80px',
+                backgroundColor: '#0a0a0a',
+                border: '2px solid #333',
+                color: '#00ff88',
+                padding: '8px 12px',
+                borderRadius: '2px',
+                fontSize: '12px',
+                fontFamily: 'Consolas, monospace',
+                fontWeight: '700',
+                textAlign: 'center',
+                transition: 'all 0.3s'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#00ff88'
+                e.target.style.boxShadow = '0 0 10px rgba(0, 255, 136, 0.3)'
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#333'
+                e.target.style.boxShadow = 'none'
+              }}
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <label style={{ fontSize: '9px', color: '#888', letterSpacing: '1px', fontWeight: '700' }}>LONG</label>
+            <input
+              type="number"
+              value={assetStrategies[ticker]?.params?.long_window || 50}
+              onChange={(e) => handleStrategyChange(ticker, 'sma', {
+                ...assetStrategies[ticker].params,
+                long_window: parseInt(e.target.value)
+              })}
+              style={{
+                width: '80px',
+                backgroundColor: '#0a0a0a',
+                border: '2px solid #333',
+                color: '#00ff88',
+                padding: '8px 12px',
+                borderRadius: '2px',
+                fontSize: '12px',
+                fontFamily: 'Consolas, monospace',
+                fontWeight: '700',
+                textAlign: 'center',
+                transition: 'all 0.3s'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#00ff88'
+                e.target.style.boxShadow = '0 0 10px rgba(0, 255, 136, 0.3)'
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#333'
+                e.target.style.boxShadow = 'none'
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {assetStrategies[ticker]?.strategy === 'mean_reversion' && (
+        <div style={{ display: 'flex', gap: '10px', marginLeft: '95px', marginTop: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <label style={{ fontSize: '9px', color: '#888', letterSpacing: '1px', fontWeight: '700' }}>WINDOW</label>
+            <input
+              type="number"
+              value={assetStrategies[ticker]?.params?.window || 20}
+              onChange={(e) => handleStrategyChange(ticker, 'mean_reversion', {
+                ...assetStrategies[ticker].params,
+                window: parseInt(e.target.value)
+              })}
+              style={{
+                width: '80px',
+                backgroundColor: '#0a0a0a',
+                border: '2px solid #333',
+                color: '#ffa500',
+                padding: '8px 12px',
+                borderRadius: '2px',
+                fontSize: '12px',
+                fontFamily: 'Consolas, monospace',
+                fontWeight: '700',
+                textAlign: 'center',
+                transition: 'all 0.3s'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#ffa500'
+                e.target.style.boxShadow = '0 0 10px rgba(255, 165, 0, 0.3)'
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#333'
+                e.target.style.boxShadow = 'none'
+              }}
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <label style={{ fontSize: '9px', color: '#888', letterSpacing: '1px', fontWeight: '700' }}>Z-SCORE</label>
+            <input
+              type="number"
+              step="0.1"
+              value={assetStrategies[ticker]?.params?.threshold || 2.0}
+              onChange={(e) => handleStrategyChange(ticker, 'mean_reversion', {
+                ...assetStrategies[ticker].params,
+                threshold: parseFloat(e.target.value)
+              })}
+              style={{
+                width: '80px',
+                backgroundColor: '#0a0a0a',
+                border: '2px solid #333',
+                color: '#ffa500',
+                padding: '8px 12px',
+                borderRadius: '2px',
+                fontSize: '12px',
+                fontFamily: 'Consolas, monospace',
+                fontWeight: '700',
+                textAlign: 'center',
+                transition: 'all 0.3s'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#ffa500'
+                e.target.style.boxShadow = '0 0 10px rgba(255, 165, 0, 0.3)'
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#333'
+                e.target.style.boxShadow = 'none'
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  ))}
+</div>
+
+
+
       {/* Controls */}
-      <div style={{ display: 'flex', gap: '15px', marginBottom: '35px', flexWrap: 'wrap' }}>
-        <select
-          value={weightStrategy}
-          onChange={(e) => setWeightStrategy(e.target.value)}
-          className="controls"
-        >
-          <option value="equal">EQUAL WEIGHT</option>
-          <option value="custom">CUSTOM WEIGHTS</option>
-        </select>
+      <div style={{ display: 'flex', gap: '15px', marginBottom: '35px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative' }}>
+          <select
+            value={weightStrategy}
+            onChange={(e) => setWeightStrategy(e.target.value)}
+            style={{
+              backgroundColor: '#1a1a1a',
+              border: '2px solid #333',
+              borderLeft: '3px solid #ff8c00',
+              color: '#d4d4d4',
+              padding: '12px 40px 12px 18px',
+              borderRadius: '2px',
+              fontSize: '11px',
+              fontFamily: 'Consolas, monospace',
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+              fontWeight: '700',
+              letterSpacing: '1px',
+              appearance: 'none',
+              minWidth: '200px',
+              transition: 'all 0.3s',
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.borderColor = '#ff8c00'
+              e.target.style.boxShadow = '0 0 15px rgba(255, 140, 0, 0.3)'
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.borderColor = '#333'
+              e.target.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.5)'
+            }}
+          >
+            <option value="equal">⚖️ EQUAL WEIGHT</option>
+            <option value="custom">⚙️ CUSTOM WEIGHTS</option>
+          </select>
+          <div style={{
+            position: 'absolute',
+            right: '15px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            pointerEvents: 'none',
+            color: '#ff8c00',
+            fontSize: '12px'
+          }}>▼</div>
+        </div>
 
-        <select
-          value={period}
-          onChange={(e) => setPeriod(e.target.value)}
-          className="controls"
-        >
-          <option value="1mo">1 MONTH</option>
-          <option value="6mo">6 MONTHS</option>
-          <option value="1y">1 YEAR</option>
-          <option value="2y">2 YEARS</option>
-          <option value="5y">5 YEARS</option>
-        </select>
+        <div style={{ position: 'relative' }}>
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+            style={{
+              backgroundColor: '#1a1a1a',
+              border: '2px solid #333',
+              borderLeft: '3px solid #ff8c00',
+              color: '#d4d4d4',
+              padding: '12px 40px 12px 18px',
+              borderRadius: '2px',
+              fontSize: '11px',
+              fontFamily: 'Consolas, monospace',
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+              fontWeight: '700',
+              letterSpacing: '1px',
+              appearance: 'none',
+              minWidth: '180px',
+              transition: 'all 0.3s',
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.borderColor = '#ff8c00'
+              e.target.style.boxShadow = '0 0 15px rgba(255, 140, 0, 0.3)'
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.borderColor = '#333'
+              e.target.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.5)'
+            }}
+          >
+            <option value="1mo">📅 1 MONTH</option>
+            <option value="6mo">📅 6 MONTHS</option>
+            <option value="1y">📅 1 YEAR</option>
+            <option value="2y">📅 2 YEARS</option>
+            <option value="5y">📅 5 YEARS</option>
+          </select>
+          <div style={{
+            position: 'absolute',
+            right: '15px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            pointerEvents: 'none',
+            color: '#ff8c00',
+            fontSize: '12px'
+          }}>▼</div>
+        </div>
 
-        <select
-          value={rebalanceFreq}
-          onChange={(e) => setRebalanceFreq(e.target.value)}
-          className="controls"
-        >
-          <option value="never">NO REBALANCING</option>
-          <option value="monthly">MONTHLY</option>
-          <option value="quarterly">QUARTERLY</option>
-          <option value="yearly">YEARLY</option>
-        </select>
+        <div style={{ position: 'relative' }}>
+          <select
+            value={rebalanceFreq}
+            onChange={(e) => setRebalanceFreq(e.target.value)}
+            style={{
+              backgroundColor: '#1a1a1a',
+              border: '2px solid #333',
+              borderLeft: '3px solid #ff8c00',
+              color: '#d4d4d4',
+              padding: '12px 40px 12px 18px',
+              borderRadius: '2px',
+              fontSize: '11px',
+              fontFamily: 'Consolas, monospace',
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+              fontWeight: '700',
+              letterSpacing: '1px',
+              appearance: 'none',
+              minWidth: '200px',
+              transition: 'all 0.3s',
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.borderColor = '#ff8c00'
+              e.target.style.boxShadow = '0 0 15px rgba(255, 140, 0, 0.3)'
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.borderColor = '#333'
+              e.target.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.5)'
+            }}
+          >
+            <option value="never">🔒 NO REBALANCING</option>
+            <option value="monthly">📊 MONTHLY</option>
+            <option value="quarterly">📊 QUARTERLY</option>
+            <option value="yearly">📊 YEARLY</option>
+          </select>
+          <div style={{
+            position: 'absolute',
+            right: '15px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            pointerEvents: 'none',
+            color: '#ff8c00',
+            fontSize: '12px'
+          }}>▼</div>
+        </div>
 
-        <button onClick={fetchCorrelation} className="controls">
-          CORRELATION
+        <button
+          onClick={fetchCorrelation}
+          style={{
+            background: 'linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%)',
+            border: '2px solid #ff8c00',
+            color: '#ff8c00',
+            padding: '12px 28px',
+            borderRadius: '2px',
+            fontSize: '11px',
+            fontWeight: '800',
+            cursor: 'pointer',
+            transition: 'all 0.3s',
+            textTransform: 'uppercase',
+            letterSpacing: '1.5px',
+            fontFamily: 'Consolas, monospace',
+            boxShadow: '0 4px 15px rgba(255, 140, 0, 0.2)'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = 'linear-gradient(135deg, #ff8c00 0%, #ffa500 100%)'
+            e.target.style.color = '#000'
+            e.target.style.transform = 'translateY(-2px)'
+            e.target.style.boxShadow = '0 6px 20px rgba(255, 140, 0, 0.5)'
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = 'linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%)'
+            e.target.style.color = '#ff8c00'
+            e.target.style.transform = 'translateY(0)'
+            e.target.style.boxShadow = '0 4px 15px rgba(255, 140, 0, 0.2)'
+          }}
+        >
+          📈 CORRELATION
         </button>
 
-        <button onClick={runBacktest} className="controls">
-          EXECUTE
+        <button
+          onClick={runBacktest}
+          style={{
+            background: 'linear-gradient(135deg, #ff8c00 0%, #ffa500 100%)',
+            border: 'none',
+            color: '#000',
+            padding: '12px 35px',
+            borderRadius: '2px',
+            fontSize: '12px',
+            fontWeight: '900',
+            cursor: 'pointer',
+            transition: 'all 0.3s',
+            textTransform: 'uppercase',
+            letterSpacing: '2px',
+            fontFamily: 'Consolas, monospace',
+            boxShadow: '0 4px 20px rgba(255, 140, 0, 0.4)'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateY(-3px) scale(1.05)'
+            e.target.style.boxShadow = '0 8px 30px rgba(255, 140, 0, 0.6)'
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateY(0) scale(1)'
+            e.target.style.boxShadow = '0 4px 20px rgba(255, 140, 0, 0.4)'
+          }}
+        >
+          ▶️ EXECUTE
         </button>
       </div>
 
@@ -405,6 +842,10 @@ function PortfolioView() {
                 Object.keys(individualAssets).forEach(ticker => {
                   enrichedRow[ticker] = individualAssets[ticker][index]
                 })
+                // Normalize portfolio field name (handle both formats)
+                if (row.Cumulative_Portfolio && !row.Portfolio_Cumulative) {
+                  enrichedRow.Portfolio_Cumulative = row.Cumulative_Portfolio
+                }
                 return enrichedRow
               })}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#222" />

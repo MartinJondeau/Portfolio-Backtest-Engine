@@ -373,6 +373,112 @@ def backtest_portfolio(request: PortfolioBacktestRequest):
         "tickers": list(assets_data.keys())
     }
 
+@app.post("/api/portfolio/backtest-strategies")
+def backtest_portfolio_with_strategies(request: dict):
+    """
+    Backtest portfolio where each asset can have its own strategy
+    Request format:
+    {
+        "assets": [
+            {"ticker": "AAPL", "strategy": "sma", "params": {"short_window": 20, "long_window": 50}},
+            {"ticker": "MSFT", "strategy": "mean_reversion", "params": {"window": 20, "threshold": 2.0}},
+            {"ticker": "GOOGL", "strategy": "buy_hold", "params": {}}
+        ],
+        "period": "2y",
+        "weights": {"AAPL": 0.33, "MSFT": 0.33, "GOOGL": 0.34}
+    }
+    """
+    assets_config = request.get('assets', [])
+    period = request.get('period', '2y')
+    weights = request.get('weights', None)
+    
+    if len(assets_config) < 3:
+        raise HTTPException(status_code=400, detail="Please provide at least 3 assets")
+    
+    # Fetch and apply strategies for each asset
+    assets_returns = {}
+    tickers = []
+    
+    for asset in assets_config:
+        ticker = asset['ticker']
+        strategy = asset['strategy']
+        params = asset.get('params', {})
+        
+        tickers.append(ticker)
+        
+        try:
+            # Fetch data
+            df = fetch_data_with_retry(ticker, period=period)
+            
+            if df.empty:
+                continue
+            
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
+            
+            # Apply strategy
+            if strategy == 'sma':
+                short_window = params.get('short_window', 20)
+                long_window = params.get('long_window', 50)
+                processed = apply_sma_strategy(df, short_window, long_window)
+                returns = processed['Strategy_Return']
+            elif strategy == 'mean_reversion':
+                window = params.get('window', 20)
+                threshold = params.get('threshold', 2.0)
+                processed = apply_mean_reversion_strategy(df, window, threshold)
+                returns = processed['Strategy_Return']
+            else:  # buy_hold
+                returns = df['Close'].pct_change()
+            
+            assets_returns[ticker] = returns.fillna(0)
+            
+        except Exception as e:
+            logger.error(f"Error processing {ticker}: {e}")
+            continue
+    
+    if len(assets_returns) < 3:
+        raise HTTPException(status_code=404, detail="Could not process at least 3 assets")
+    
+    # Create DataFrame with all returns
+    returns_df = pd.DataFrame(assets_returns)
+    
+    # Calculate portfolio returns
+    if weights is None:
+        # Equal weights
+        weights_series = pd.Series({ticker: 1.0 / len(tickers) for ticker in tickers})
+    else:
+        weights_series = pd.Series(weights)
+    
+    portfolio_returns = (returns_df * weights_series).sum(axis=1)
+    
+    # Calculate cumulative returns
+    portfolio_cumulative = (1 + portfolio_returns).cumprod()
+    
+    # Individual asset cumulative returns
+    individual_assets = {}
+    for ticker in tickers:
+        if ticker in assets_returns:
+            cumulative = (1 + assets_returns[ticker]).cumprod()
+            individual_assets[ticker] = cumulative.values.tolist()
+    
+    # Calculate metrics
+    metrics = calculate_portfolio_metrics(portfolio_returns)
+    
+    # Format response
+    result_df = pd.DataFrame({
+        'Date': returns_df.index,
+        'Cumulative_Portfolio': portfolio_cumulative.values
+    })
+    result_df['Date'] = pd.to_datetime(result_df['Date']).dt.strftime('%Y-%m-%d')
+    
+    return {
+        "metrics": metrics,
+        "portfolio_data": result_df.to_dict(orient='records'),
+        "individual_assets": individual_assets,
+        "tickers": tickers
+    }
+
+
 # --- Reporting (QUANT A) ---
 @app.get("/api/reports/latest")
 def get_latest_report():
