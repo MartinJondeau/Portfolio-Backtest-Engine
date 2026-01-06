@@ -10,7 +10,7 @@ export default function LiveBadge({ ticker }) {
     const fetchQuote = async () => {
         try {
             setError(false);
-            const res = await axios.get(`http://127.0.0.1:8001/api/asset/${ticker}/realtime`);
+            const res = await axios.get(`/api/asset/${ticker}/realtime`);
             setQuote(res.data);
         } catch (err) {
             console.error(err);
