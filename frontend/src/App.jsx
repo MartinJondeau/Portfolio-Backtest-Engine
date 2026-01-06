@@ -61,13 +61,20 @@ function App() {
             </p>
           </div>
         </div>
-        <div style={{ 
-          fontSize: '10px', 
-          color: '#555',
-          fontFamily: 'Consolas, monospace',
-          letterSpacing: '1px'
-        }}>
-          {new Date().toLocaleTimeString()}
+        {/* RIGHT SIDE: Button & Time */}
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          {/* 1. INSERT THE BUTTON HERE */}
+          <DownloadReportButton />
+          <div style={{ 
+            fontSize: '10px', 
+            color: '#555',
+            fontFamily: 'Consolas, monospace',
+            letterSpacing: '1px',
+            borderLeft: '1px solid #333', // Little separator line
+            paddingLeft: '15px'
+          }}>
+            {new Date().toLocaleTimeString()}
+          </div>
         </div>
       </header>
 
@@ -317,7 +324,6 @@ function SingleAssetView() {
               background: '#111', border: '1px solid #333', borderRadius: '6px',
               position: 'relative', overflow: 'hidden'
             }}>
-              
               {/* Header with Fixed Color */}
               <div style={{ 
                 padding: '15px 20px', borderBottom: '1px solid #222', 
@@ -540,5 +546,56 @@ function StrategyMetricCard({ title, value, color }) {
     </div>
   )
 }
+// ========================================
+// 3. DOWNLOAD BUTTON COMPONENT
+// ========================================
+function DownloadReportButton() {
+  const handleDownload = async () => {
+    try {
+      const response = await axios.get('/api/reports/latest');
+      
+      const jsonData = JSON.stringify(response.data, null, 4);
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      const fileName = response.data.date 
+        ? `${response.data.date}_daily_report.json` 
+        : 'daily_report.json';
+        
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+    } catch (err) {
+      console.error("Download failed:", err);
+      alert("No report found. Please wait for the daily generation.");
+    }
+  }
 
+  return (
+    <button 
+      onClick={handleDownload}
+      style={{
+        display: 'flex', alignItems: 'center', gap: '6px',
+        padding: '6px 12px',
+        marginRight: '15px', // Spacing between button and time
+        background: 'rgba(255, 140, 0, 0.1)', 
+        color: '#ff8c00',
+        border: '1px solid #ff8c00', borderRadius: '4px',
+        cursor: 'pointer', fontSize: '10px', fontWeight: 'bold',
+        textTransform: 'uppercase', letterSpacing: '1px',
+        transition: 'all 0.2s',
+        height: '30px'
+      }}
+      onMouseOver={(e) => e.target.style.background = 'rgba(255, 140, 0, 0.2)'}
+      onMouseOut={(e) => e.target.style.background = 'rgba(255, 140, 0, 0.1)'}
+    >
+      <span></span> REPORT
+    </button>
+  )
+}
 export default App
