@@ -385,12 +385,16 @@ def backtest_portfolio_with_strategies(request: dict):
             {"ticker": "GOOGL", "strategy": "buy_hold", "params": {}}
         ],
         "period": "2y",
-        "weights": {"AAPL": 0.33, "MSFT": 0.33, "GOOGL": 0.34}
+        "weights": {"AAPL": 0.33, "MSFT": 0.33, "GOOGL": 0.34},
+        "start_date": "2023-01-01",  # Optional: specific start date
+        "initial_amount": 10000  # Optional: initial investment amount
     }
     """
     assets_config = request.get('assets', [])
     period = request.get('period', '2y')
     weights = request.get('weights', None)
+    start_date = request.get('start_date', None)
+    initial_amount = request.get('initial_amount', None)
     
     if len(assets_config) < 3:
         raise HTTPException(status_code=400, detail="Please provide at least 3 assets")
@@ -451,31 +455,63 @@ def backtest_portfolio_with_strategies(request: dict):
     
     portfolio_returns = (returns_df * weights_series).sum(axis=1)
     
+    # Filter data by start_date if provided
+    if start_date:
+        try:
+            start_date_parsed = pd.to_datetime(start_date)
+            returns_df = returns_df[returns_df.index >= start_date_parsed]
+            portfolio_returns = (returns_df * weights_series).sum(axis=1)
+        except Exception as e:
+            logger.warning(f"Invalid start_date format: {e}. Using all data.")
+
     # Calculate cumulative returns
     portfolio_cumulative = (1 + portfolio_returns).cumprod()
-    
+
     # Individual asset cumulative returns
     individual_assets = {}
     for ticker in tickers:
         if ticker in assets_returns:
-            cumulative = (1 + assets_returns[ticker]).cumprod()
+            asset_returns_filtered = assets_returns[ticker]
+            if start_date:
+                asset_returns_filtered = asset_returns_filtered[asset_returns_filtered.index >= start_date_parsed]
+            cumulative = (1 + asset_returns_filtered).cumprod()
             individual_assets[ticker] = cumulative.values.tolist()
-    
+
     # Calculate metrics
     metrics = calculate_portfolio_metrics(portfolio_returns)
-    
+
+    # Calculate P&L in currency if initial_amount is provided
+    portfolio_value = None
+    if initial_amount and initial_amount > 0:
+        portfolio_value = portfolio_cumulative * initial_amount
+        final_value = portfolio_value.iloc[-1]
+        total_pnl = final_value - initial_amount
+        total_pnl_pct = (total_pnl / initial_amount) * 100
+
+        # Add P&L metrics
+        metrics["Initial Investment"] = f"€{initial_amount:,.2f}"
+        metrics["Final Value"] = f"€{final_value:,.2f}"
+        metrics["Total P&L"] = f"€{total_pnl:,.2f}"
+        metrics["Total P&L %"] = f"{total_pnl_pct:.2f}%"
+
     # Format response
     result_df = pd.DataFrame({
         'Date': returns_df.index,
         'Cumulative_Portfolio': portfolio_cumulative.values
     })
+
+    # Add portfolio value in currency if applicable
+    if portfolio_value is not None:
+        result_df['Portfolio_Value'] = portfolio_value.values
+
     result_df['Date'] = pd.to_datetime(result_df['Date']).dt.strftime('%Y-%m-%d')
-    
+
     return {
         "metrics": metrics,
         "portfolio_data": result_df.to_dict(orient='records'),
         "individual_assets": individual_assets,
-        "tickers": tickers
+        "tickers": tickers,
+        "has_real_simulation": initial_amount is not None and initial_amount > 0
     }
 
 

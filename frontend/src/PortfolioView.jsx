@@ -16,6 +16,10 @@ function PortfolioView() {
   const [isAutoRefresh, setIsAutoRefresh] = useState(true)
   const [lastUpdated, setLastUpdated] = useState(null)
   const [assetStrategies, setAssetStrategies] = useState({})
+  const [startDate, setStartDate] = useState('')
+  const [initialAmount, setInitialAmount] = useState('')
+  const [hasRealSimulation, setHasRealSimulation] = useState(false)
+  const [graphTimeWindow, setGraphTimeWindow] = useState('all')
 
   // Initialize custom weights when tickers change
   useEffect(() => {
@@ -75,7 +79,7 @@ function PortfolioView() {
   try {
     // Check if using individual strategies
     const useIndividualStrategies = Object.keys(assetStrategies).length > 0
-    
+
     if (useIndividualStrategies) {
       // Build assets config
       const assets = tickers.map(ticker => ({
@@ -83,7 +87,7 @@ function PortfolioView() {
         strategy: assetStrategies[ticker]?.strategy || 'buy_hold',
         params: assetStrategies[ticker]?.params || {}
       }))
-      
+
       // Prepare weights
       let weightsPayload = null
       if (weightStrategy === 'custom') {
@@ -97,16 +101,19 @@ function PortfolioView() {
           weightsPayload[ticker] = customWeights[ticker] / 100
         })
       }
-      
-      const response = await axios.post('http://127.0.0.1:8001/api/portfolio/backtest-strategies', {
+
+      const payload = {
         assets: assets,
         period: period,
         weights: weightsPayload
-      })
-      
+      }
+
+      const response = await axios.post('http://127.0.0.1:8001/api/portfolio/backtest-strategies', payload)
+
       setPortfolioData(response.data.portfolio_data)
       setMetrics(response.data.metrics)
       setIndividualAssets(response.data.individual_assets)
+      setHasRealSimulation(false)
       setLastUpdated(new Date().toLocaleTimeString())
     } else {
       // Original backtest logic (equal weight or custom weight, no strategies)
@@ -132,12 +139,96 @@ function PortfolioView() {
       setPortfolioData(response.data.portfolio_data)
       setMetrics(response.data.metrics)
       setIndividualAssets(response.data.individual_assets)
+      setHasRealSimulation(false)
       setLastUpdated(new Date().toLocaleTimeString())
     }
   } catch (error) {
     console.error('Error:', error)
     alert('CONNECTION ERROR')
   }
+}
+
+const simulatePnL = () => {
+  // Validate inputs
+  if (!startDate || !initialAmount || parseFloat(initialAmount) <= 0) {
+    alert('PLEASE ENTER BOTH START DATE AND INITIAL AMOUNT')
+    return
+  }
+
+  if (portfolioData.length === 0) {
+    alert('PLEASE EXECUTE A BACKTEST FIRST')
+    return
+  }
+
+  try {
+    // Filter portfolio data by start date
+    let filteredData = portfolioData
+    if (startDate) {
+      filteredData = portfolioData.filter(row => new Date(row.Date) >= new Date(startDate))
+    }
+
+    if (filteredData.length === 0) {
+      alert('NO DATA AVAILABLE FOR THE SELECTED START DATE')
+      return
+    }
+
+    // Get initial and final portfolio cumulative returns
+    const initialReturn = filteredData[0].Portfolio_Cumulative || filteredData[0].Cumulative_Portfolio
+    const finalReturn = filteredData[filteredData.length - 1].Portfolio_Cumulative || filteredData[filteredData.length - 1].Cumulative_Portfolio
+
+    // Calculate P&L in euros
+    const amount = parseFloat(initialAmount)
+    const initialValue = amount
+    const finalValue = (finalReturn / initialReturn) * amount
+    const totalPnL = finalValue - initialValue
+    const totalPnLPct = (totalPnL / initialValue) * 100
+
+    // Update metrics with P&L data
+    setMetrics(prevMetrics => ({
+      ...prevMetrics,
+      "Initial Investment": `€${initialValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      "Final Value": `€${finalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      "Total P&L": `€${totalPnL.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      "Total P&L %": `${totalPnLPct.toFixed(2)}%`
+    }))
+
+    setHasRealSimulation(true)
+  } catch (error) {
+    console.error('Error calculating P&L:', error)
+    alert('ERROR CALCULATING P&L')
+  }
+}
+
+const getFilteredGraphData = () => {
+  if (portfolioData.length === 0) return []
+
+  if (graphTimeWindow === 'all') return portfolioData
+
+  // Calculate cutoff date based on selected window
+  const now = new Date(portfolioData[portfolioData.length - 1].Date)
+  let cutoffDate = new Date(now)
+
+  switch (graphTimeWindow) {
+    case '1mo':
+      cutoffDate.setMonth(cutoffDate.getMonth() - 1)
+      break
+    case '3mo':
+      cutoffDate.setMonth(cutoffDate.getMonth() - 3)
+      break
+    case '6mo':
+      cutoffDate.setMonth(cutoffDate.getMonth() - 6)
+      break
+    case '1y':
+      cutoffDate.setFullYear(cutoffDate.getFullYear() - 1)
+      break
+    case '5y':
+      cutoffDate.setFullYear(cutoffDate.getFullYear() - 5)
+      break
+    default:
+      return portfolioData
+  }
+
+  return portfolioData.filter(row => new Date(row.Date) >= cutoffDate)
 }
 
 const handleStrategyChange = (ticker, strategy, params = {}) => {
@@ -824,23 +915,66 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
       {/* Chart */}
       {portfolioData.length > 0 && (
         <div className="bloomberg-panel" style={{ padding: '30px' }}>
-          <h3 style={{
-            fontSize: '13px',
-            fontWeight: '800',
-            color: '#ff8c00',
-            letterSpacing: '2px',
-            marginBottom: '25px',
-            textTransform: 'uppercase'
-          }}>
-            PORTFOLIO CUMULATIVE PERFORMANCE
-          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+            <h3 style={{
+              fontSize: '13px',
+              fontWeight: '800',
+              color: '#ff8c00',
+              letterSpacing: '2px',
+              margin: 0,
+              textTransform: 'uppercase'
+            }}>
+              PORTFOLIO CUMULATIVE PERFORMANCE
+            </h3>
+
+            {/* Time Window Selector */}
+            <div style={{ display: 'flex', gap: '10px' }}>
+              {['1mo', '3mo', '6mo', '1y', '5y', 'all'].map(window => (
+                <button
+                  key={window}
+                  onClick={() => setGraphTimeWindow(window)}
+                  style={{
+                    background: graphTimeWindow === window
+                      ? 'linear-gradient(135deg, #ff8c00 0%, #ffa500 100%)'
+                      : 'rgba(255, 140, 0, 0.1)',
+                    border: graphTimeWindow === window ? 'none' : '1px solid #ff8c00',
+                    color: graphTimeWindow === window ? '#000' : '#ff8c00',
+                    padding: '8px 16px',
+                    borderRadius: '2px',
+                    fontSize: '10px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                    fontFamily: 'Consolas, monospace'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (graphTimeWindow !== window) {
+                      e.target.style.background = 'rgba(255, 140, 0, 0.2)'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (graphTimeWindow !== window) {
+                      e.target.style.background = 'rgba(255, 140, 0, 0.1)'
+                    }
+                  }}
+                >
+                  {window === 'all' ? 'ALL' : window.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div style={{ width: '100%', height: 450 }}>
             <ResponsiveContainer>
-              <LineChart data={portfolioData.map((row, index) => {
+              <LineChart data={getFilteredGraphData().map((row) => {
                 const enrichedRow = { ...row }
+                // Calculate the correct index in the original data
+                const originalIndex = portfolioData.findIndex(d => d.Date === row.Date)
                 // Add individual asset data for this date
                 Object.keys(individualAssets).forEach(ticker => {
-                  enrichedRow[ticker] = individualAssets[ticker][index]
+                  enrichedRow[ticker] = individualAssets[ticker][originalIndex]
                 })
                 // Normalize portfolio field name (handle both formats)
                 if (row.Cumulative_Portfolio && !row.Portfolio_Cumulative) {
@@ -875,6 +1009,197 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
                 })}
               </LineChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* Real Portfolio Simulation Section */}
+      {portfolioData.length > 0 && (
+        <div className="bloomberg-panel" style={{ padding: '30px', marginTop: '35px' }}>
+          <h3 style={{
+            fontSize: '13px',
+            fontWeight: '800',
+            color: '#00ff88',
+            letterSpacing: '2px',
+            marginBottom: '25px',
+            textTransform: 'uppercase'
+          }}>
+            💰 REAL PORTFOLIO SIMULATION
+          </h3>
+
+          {/* Simulation Inputs and P&L Display */}
+          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            {/* Start Date Input */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{
+                fontSize: '10px',
+                color: '#888',
+                letterSpacing: '1px',
+                fontWeight: '700',
+                textTransform: 'uppercase'
+              }}>📅 Investment Start Date</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                style={{
+                  backgroundColor: '#1a1a1a',
+                  border: '2px solid #333',
+                  borderLeft: '3px solid #00d4ff',
+                  color: '#d4d4d4',
+                  padding: '12px 18px',
+                  borderRadius: '2px',
+                  fontSize: '12px',
+                  fontFamily: 'Consolas, monospace',
+                  fontWeight: '700',
+                  transition: 'all 0.3s',
+                  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)',
+                  width: '200px'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#00d4ff'
+                  e.target.style.boxShadow = '0 0 15px rgba(0, 212, 255, 0.4)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#333'
+                  e.target.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.5)'
+                }}
+              />
+            </div>
+
+            {/* Initial Amount Input */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{
+                fontSize: '10px',
+                color: '#888',
+                letterSpacing: '1px',
+                fontWeight: '700',
+                textTransform: 'uppercase'
+              }}>💵 Initial Investment (€)</label>
+              <input
+                type="number"
+                value={initialAmount}
+                onChange={(e) => setInitialAmount(e.target.value)}
+                placeholder="0"
+                style={{
+                  backgroundColor: '#1a1a1a',
+                  border: '2px solid #333',
+                  borderLeft: '3px solid #00ff88',
+                  color: '#00ff88',
+                  padding: '12px 18px',
+                  borderRadius: '2px',
+                  fontSize: '12px',
+                  fontFamily: 'Consolas, monospace',
+                  fontWeight: '700',
+                  transition: 'all 0.3s',
+                  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)',
+                  width: '180px',
+                  textAlign: 'center'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#00ff88'
+                  e.target.style.boxShadow = '0 0 15px rgba(0, 255, 136, 0.4)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#333'
+                  e.target.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.5)'
+                }}
+              />
+            </div>
+
+            {/* Execute Simulation Button */}
+            <button
+              onClick={simulatePnL}
+              style={{
+                background: 'linear-gradient(135deg, #00ff88 0%, #00d4aa 100%)',
+                border: 'none',
+                color: '#000',
+                padding: '12px 30px',
+                borderRadius: '2px',
+                fontSize: '11px',
+                fontWeight: '900',
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                textTransform: 'uppercase',
+                letterSpacing: '2px',
+                fontFamily: 'Consolas, monospace',
+                boxShadow: '0 4px 20px rgba(0, 255, 136, 0.4)',
+                height: '46px'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px) scale(1.05)'
+                e.target.style.boxShadow = '0 8px 30px rgba(0, 255, 136, 0.6)'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0) scale(1)'
+                e.target.style.boxShadow = '0 4px 20px rgba(0, 255, 136, 0.4)'
+              }}
+            >
+              🚀 SIMULATE
+            </button>
+
+            {/* P&L Metrics Display - Inline */}
+            {hasRealSimulation && (
+              <>
+                {/* Separator */}
+                <div style={{
+                  width: '2px',
+                  height: '46px',
+                  background: 'linear-gradient(to bottom, transparent, #00ff88, transparent)',
+                  margin: '0 10px'
+                }}></div>
+
+                {/* P&L Values */}
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '9px', color: '#666', marginBottom: '5px', letterSpacing: '1px', fontWeight: '700' }}>INVESTED</div>
+                    <div style={{ fontSize: '16px', fontWeight: '900', color: '#00d4ff', fontFamily: 'Consolas, monospace' }}>
+                      {metrics["Initial Investment"]}
+                    </div>
+                  </div>
+
+                  <div style={{ fontSize: '20px', color: '#555' }}>→</div>
+
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '9px', color: '#666', marginBottom: '5px', letterSpacing: '1px', fontWeight: '700' }}>FINAL VALUE</div>
+                    <div style={{ fontSize: '16px', fontWeight: '900', color: '#00ff88', fontFamily: 'Consolas, monospace' }}>
+                      {metrics["Final Value"]}
+                    </div>
+                  </div>
+
+                  <div style={{ fontSize: '20px', color: '#555' }}>=</div>
+
+                  <div style={{
+                    padding: '12px 20px',
+                    background: metrics["Total P&L"].includes('-')
+                      ? 'linear-gradient(135deg, rgba(255, 68, 68, 0.1) 0%, rgba(255, 68, 68, 0.2) 100%)'
+                      : 'linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.2) 100%)',
+                    border: `2px solid ${metrics["Total P&L"].includes('-') ? '#ff4444' : '#00ff88'}`,
+                    borderRadius: '4px',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '9px', color: '#888', marginBottom: '5px', letterSpacing: '1px', fontWeight: '700' }}>P&L</div>
+                    <div style={{
+                      fontSize: '18px',
+                      fontWeight: '900',
+                      color: metrics["Total P&L"].includes('-') ? '#ff4444' : '#00ff88',
+                      fontFamily: 'Consolas, monospace'
+                    }}>
+                      {metrics["Total P&L"]}
+                    </div>
+                    <div style={{
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      color: metrics["Total P&L %"].includes('-') ? '#ff4444' : '#00ff88',
+                      fontFamily: 'Consolas, monospace',
+                      marginTop: '3px'
+                    }}>
+                      ({metrics["Total P&L %"]})
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

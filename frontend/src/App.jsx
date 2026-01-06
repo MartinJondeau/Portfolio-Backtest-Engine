@@ -147,7 +147,7 @@ function App() {
         textAlign: 'center',
         letterSpacing: '1px'
       }}>
-        BLOOMBERG TERMINAL © 2026 | QUANT A & QUANT B - PORTFOLIO ANALYSIS MODULE
+        BLOOMBERG TERMINAL © 2026 | ADRIEN & MARTIN - PORTFOLIO ANALYSIS MODULE
       </footer>
     </div>
   )
