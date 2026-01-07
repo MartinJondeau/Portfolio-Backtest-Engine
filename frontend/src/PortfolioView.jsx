@@ -257,7 +257,7 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
     let interval = null
     if (isAutoRefresh && portfolioData.length > 0) {
       interval = setInterval(() => {
-        console.log("🔄 Auto-refresh triggered...")
+        console.log(" Auto-refresh triggered...")
         runBacktest()
       }, 300000) // 5 minutes
     }
@@ -308,7 +308,7 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
             letterSpacing: '1px'
           }}
         >
-          {isAutoRefresh ? '⏸️ PAUSE' : '▶️ RESUME'}
+          {isAutoRefresh ? '⏸ PAUSE' : '▶ RESUME'}
         </button>
       </div>
 
@@ -519,9 +519,9 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
               e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3)'
             }}
           >
-            <option value="buy_hold">💼 BUY & HOLD</option>
-            <option value="sma">📊 SMA CROSSOVER</option>
-            <option value="mean_reversion">🔄 MEAN REVERSION</option>
+            <option value="buy_hold"> BUY & HOLD</option>
+            <option value="sma"> SMA CROSSOVER</option>
+            <option value="mean_reversion"> MEAN REVERSION</option>
           </select>
           <div style={{
             position: 'absolute',
@@ -713,8 +713,8 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
               e.target.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.5)'
             }}
           >
-            <option value="equal">⚖️ EQUAL WEIGHT</option>
-            <option value="custom">⚙️ CUSTOM WEIGHTS</option>
+            <option value="equal"> EQUAL WEIGHT</option>
+            <option value="custom"> CUSTOM WEIGHTS</option>
           </select>
           <div style={{
             position: 'absolute',
@@ -758,11 +758,11 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
               e.target.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.5)'
             }}
           >
-            <option value="1mo">📅 1 MONTH</option>
-            <option value="6mo">📅 6 MONTHS</option>
-            <option value="1y">📅 1 YEAR</option>
-            <option value="2y">📅 2 YEARS</option>
-            <option value="5y">📅 5 YEARS</option>
+            <option value="1mo"> 1 MONTH</option>
+            <option value="6mo"> 6 MONTHS</option>
+            <option value="1y"> 1 YEAR</option>
+            <option value="2y"> 2 YEARS</option>
+            <option value="5y"> 5 YEARS</option>
           </select>
           <div style={{
             position: 'absolute',
@@ -806,10 +806,10 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
               e.target.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.5)'
             }}
           >
-            <option value="never">🔒 NO REBALANCING</option>
-            <option value="monthly">📊 MONTHLY</option>
-            <option value="quarterly">📊 QUARTERLY</option>
-            <option value="yearly">📊 YEARLY</option>
+            <option value="never"> NO REBALANCING</option>
+            <option value="monthly"> MONTHLY</option>
+            <option value="quarterly"> QUARTERLY</option>
+            <option value="yearly"> YEARLY</option>
           </select>
           <div style={{
             position: 'absolute',
@@ -852,7 +852,7 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
             e.target.style.boxShadow = '0 4px 15px rgba(255, 140, 0, 0.2)'
           }}
         >
-          📈 CORRELATION
+           CORRELATION
         </button>
 
         <button
@@ -881,7 +881,7 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
             e.target.style.boxShadow = '0 4px 20px rgba(255, 140, 0, 0.4)'
           }}
         >
-          ▶️ EXECUTE
+          ▶ EXECUTE
         </button>
       </div>
 
@@ -1024,7 +1024,7 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
             marginBottom: '25px',
             textTransform: 'uppercase'
           }}>
-            💰 REAL PORTFOLIO SIMULATION
+             REAL PORTFOLIO SIMULATION
           </h3>
 
           {/* Simulation Inputs and P&L Display */}
@@ -1037,7 +1037,7 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
                 letterSpacing: '1px',
                 fontWeight: '700',
                 textTransform: 'uppercase'
-              }}>📅 Investment Start Date</label>
+              }}> Investment Start Date</label>
               <input
                 type="date"
                 value={startDate}
@@ -1075,7 +1075,7 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
                 letterSpacing: '1px',
                 fontWeight: '700',
                 textTransform: 'uppercase'
-              }}>💵 Initial Investment (€)</label>
+              }}> Initial Investment (€)</label>
               <input
                 type="number"
                 value={initialAmount}
@@ -1135,7 +1135,7 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
                 e.target.style.boxShadow = '0 4px 20px rgba(0, 255, 136, 0.4)'
               }}
             >
-              🚀 SIMULATE
+               SIMULATE
             </button>
 
             {/* P&L Metrics Display - Inline */}
