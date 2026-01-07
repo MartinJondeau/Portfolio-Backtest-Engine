@@ -1,4 +1,4 @@
-// frontend/src/LiveBadge.jsx
+// frontend/src/components/LiveBadge.jsx
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';

@@ -934,3 +934,31 @@
 2026-01-07 13:58:36,106 [INFO] Successfully fetched 501 rows for GOOGL
 2026-01-07 14:27:58,309 [INFO] Fetching AAPL (Attempt 1/3)
 2026-01-07 14:27:58,537 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-07 16:51:47,836 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 16:51:48,078 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 16:51:48,373 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 16:51:48,591 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 16:52:13,680 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 16:52:13,898 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 16:52:14,399 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 16:52:14,655 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 17:12:45,680 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 17:12:45,934 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 17:12:53,974 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 17:12:54,164 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 17:12:54,406 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 17:12:54,629 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 17:33:37,119 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 17:33:37,340 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 17:33:37,676 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 17:33:37,896 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 17:46:58,337 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 17:46:58,564 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 17:48:51,462 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 17:48:51,652 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 17:48:51,921 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 17:48:52,105 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 17:53:48,744 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 17:53:48,979 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 17:58:49,345 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 17:58:49,572 [INFO] Successfully fetched 251 rows for AAPL
