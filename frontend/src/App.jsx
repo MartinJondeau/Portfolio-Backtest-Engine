@@ -7,20 +7,43 @@ import PortfolioView from './PortfolioView'
 import LiveBadge from './LiveBadge'
 import './App.css'
 
+// Isolated Clock Component to prevent re-renders of the entire app
+function Clock() {
+  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString())
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString())
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div style={{
+      fontSize: '10px',
+      color: '#555',
+      fontFamily: 'Consolas, monospace',
+      letterSpacing: '1px'
+    }}>
+      {currentTime}
+    </div>
+  )
+}
+
 function App() {
   // CHANGED: Default tab is now 'single'
   const [activeTab, setActiveTab] = useState('single')
 
   return (
-    <div style={{ 
-      width: '100vw', 
-      minHeight: '100vh', 
+    <div style={{
+      width: '100vw',
+      minHeight: '100vh',
       backgroundColor: '#000000',
       display: 'flex',
       flexDirection: 'column'
     }}>
       {/* Bloomberg Terminal Header */}
-      <header style={{ 
+      <header style={{
         background: 'linear-gradient(90deg, #000000 0%, #1a1a1a 50%, #000000 100%)',
         borderBottom: '3px solid #ff8c00',
         padding: '20px 40px',
@@ -37,9 +60,9 @@ function App() {
             boxShadow: '0 0 15px rgba(255, 140, 0, 0.8)'
           }}></div>
           <div>
-            <h1 style={{ 
-              margin: 0, 
-              fontSize: '28px', 
+            <h1 style={{
+              margin: 0,
+              fontSize: '28px',
               fontWeight: '900',
               color: '#ff8c00',
               letterSpacing: '2px',
@@ -47,12 +70,12 @@ function App() {
               fontFamily: 'Consolas, monospace',
               textShadow: '0 0 10px rgba(255, 140, 0, 0.5)'
             }}>
-              BLOOMBERG TERMINAL
+              HADES ANALYTICS
             </h1>
-            <p style={{ 
-              margin: '5px 0 0 0', 
+            <p style={{
+              margin: '5px 0 0 0',
               color: '#888',
-              fontSize: '11px', 
+              fontSize: '11px',
               letterSpacing: '3px',
               fontWeight: '600',
               textTransform: 'uppercase'
@@ -61,14 +84,7 @@ function App() {
             </p>
           </div>
         </div>
-        <div style={{ 
-          fontSize: '10px', 
-          color: '#555',
-          fontFamily: 'Consolas, monospace',
-          letterSpacing: '1px'
-        }}>
-          {new Date().toLocaleTimeString()}
-        </div>
+        <Clock />
       </header>
 
       {/* Navigation */}
@@ -147,7 +163,7 @@ function App() {
         textAlign: 'center',
         letterSpacing: '1px'
       }}>
-        © 2026 | ADRIEN BAYRE & MARTIN JONDEAU - PORTFOLIO BACKTEST ENGINE
+       HADES © 2026 | ADRIEN BAYRE & MARTIN JONDEAU - PORTFOLIO BACKTEST ENGINE
       </footer>
     </div>
   )
