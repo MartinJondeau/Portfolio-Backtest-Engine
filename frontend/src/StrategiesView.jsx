@@ -1,10 +1,10 @@
-// src/StrategiesView.jsx
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Area } from 'recharts'
 
 import StrategyMetricCard from './components/StrategyMetricCard'
 import LiveBadge from './components/LiveBadge'
+
 export default function StrategiesView() {
   const [ticker, setTicker] = useState('AAPL')
   
@@ -27,12 +27,18 @@ export default function StrategiesView() {
   const [lastUpdated, setLastUpdated] = useState(null)
   const [showForecast, setShowForecast] = useState(false)
   const [forecastData, setForecastData] = useState([])
+  
+  // Fetching state
+  const [isFetching, setIsFetching] = useState(false)
 
   const fetchData = async () => {
+    if (isFetching) return;
+
+    setIsFetching(true)
     setError(null)
-    setData([])           // Clear old graph
-    setForecastData([])   // Clear old forecast
-    setMetrics(null)
+    
+    // 1. DO NOT CLEAR DATA. 
+    // This allows the Chart component to stay mounted.
 
     try {
       let url = null
@@ -45,26 +51,36 @@ export default function StrategiesView() {
         url = `/api/backtest/ml/${ticker}?period=${period}&timeframe=${timeframe}`
       }
 
-      if (!url) return
+      if (!url) {
+        setIsFetching(false);
+        return;
+      }
 
       const response = await axios.get(url)
 
       if (response.data && response.data.data) {
+        // 2. JUST UPDATE THE STATE.
+        // Recharts detects the new props and attempts to "morph" the line 
+        // from the old coordinates to the new ones.
         setData(response.data.data)
         setMetrics(response.data.metrics)
         setLastUpdated(new Date().toLocaleTimeString())
 
+        // Handle Forecast
+        let newForecast = [];
         if (strategy === 'ML_RandomForest' && showForecast) {
             try {
               const forecastUrl = `/api/forecast/ml/${ticker}?period=${period}`
               const forecastRes = await axios.get(forecastUrl)
               if (forecastRes.data && forecastRes.data.forecast) {
-                 setForecastData(forecastRes.data.forecast)
+                 newForecast = forecastRes.data.forecast;
               }
             } catch (forecastErr) {
               console.error("Forecast failed:", forecastErr)
             }
         }
+        setForecastData(newForecast);
+
       } else {
         setError("Received empty data from server.")
       }
@@ -73,20 +89,28 @@ export default function StrategiesView() {
       console.error("Fetch error:", err)
       if (err.response) setError(err.response.data.detail || "Server Error")
       else setError("Cannot connect to Backend.")
+    } finally {
+      setIsFetching(false)
     }
   }
 
+  // Initial load
+  useEffect(() => {
+    fetchData(); 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) 
+
+  // Auto-refresh
   useEffect(() => {
     let interval = null
     if (isAutoRefresh) {
       interval = setInterval(() => {
-        if (!error) fetchData()
+        if (!error && !isFetching) fetchData()
       }, 300000)
     }
     return () => { if (interval) clearInterval(interval) }
-  }, [isAutoRefresh, error, ticker, strategy, shortWindow, longWindow, window, threshold, period, timeframe])
+  }, [isAutoRefresh, error, isFetching, ticker, strategy, shortWindow, longWindow, window, threshold, period, timeframe])
 
-  // --- HELPER: Merge History + Forecast for Charting ---
   const getPlotData = () => {
     if (!showForecast || forecastData.length === 0 || strategy !== 'ML_RandomForest') {
       return data;
@@ -175,12 +199,14 @@ export default function StrategiesView() {
           <option value="5y">5 YEARS</option>
         </select>
 
-        <button onClick={fetchData}>EXECUTE</button>
+        <button onClick={fetchData} disabled={isFetching}>
+            {isFetching ? 'EXECUTING...' : 'EXECUTE'}
+        </button>
       </div>
 
       {error && <div style={{ padding: '15px', marginBottom: '20px', background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: '1px solid var(--color-danger)' }}>{error}</div>}
 
-      {/* Strategy Metrics */}
+      {/* METRICS */}
       {metrics && (
         <div className="grid-container" style={{ marginBottom: '25px' }}>
           <StrategyMetricCard title="TOTAL RETURN" value={metrics["Total Return"]} color={metrics["Total Return"].includes("-") ? "#ff4444" : "#00ff88"} />          
@@ -190,15 +216,15 @@ export default function StrategiesView() {
         </div>
       )}
 
-      {/* Strategy Chart */}
-      {data.length > 0 && (
-        <div className="bloomberg-panel" style={{ padding: '24px' }}>
+      {/* CHART */}
+      <div className="bloomberg-panel" style={{ padding: '24px', minHeight: '500px' }}>
           <h3 style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px', display: 'flex', justifyContent: 'space-between' }}>
             <span>CUMULATIVE PERFORMANCE {strategy === 'ML_RandomForest' ? '(OUT-OF-SAMPLE)' : ''}</span>
             <span style={{ color: 'var(--color-primary)' }}>■ STRATEGY vs ■ MARKET</span>
           </h3>
           
           <div style={{ width: '100%', height: 450 }}>
+            {/* 3. NO KEYS HERE. Just let it update. */}
             <ResponsiveContainer>
               <ComposedChart data={getPlotData()}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -211,20 +237,59 @@ export default function StrategiesView() {
                 />
                 <Legend />
 
-                <Line type="monotone" dataKey="Cumulative_Market" name="BUY & HOLD" stroke="#00d4ff" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="Cumulative_Strategy" name={`STRATEGY (${strategy})`} stroke="#00ff88" dot={false} strokeWidth={3} />
+                {/* 4. ENABLE ANIMATION (but not Key-based). 
+                   isAnimationActive={true} allows Recharts to interpolate values. 
+                */}
+                <Line 
+                    type="monotone" 
+                    dataKey="Cumulative_Market" 
+                    name="BUY & HOLD" 
+                    stroke="#00d4ff" 
+                    dot={false} 
+                    strokeWidth={2} 
+                    isAnimationActive={true} 
+                    animationDuration={1000} // Smooth transition
+                />
+                <Line 
+                    type="monotone" 
+                    dataKey="Cumulative_Strategy" 
+                    name={`STRATEGY (${strategy})`} 
+                    stroke="#00ff88" 
+                    dot={false} 
+                    strokeWidth={3} 
+                    isAnimationActive={true}
+                    animationDuration={1000}
+                />
 
                 {showForecast && (
                   <>
-                    <Area type="monotone" dataKey="Forecast_Range" name="95% Confidence" stroke="none" fill="#00ff88" fillOpacity={0.15} />
-                    <Line type="monotone" dataKey="Forecast_Mean" name="AI FORECAST" stroke="#00ff88" strokeWidth={2} dot={false} style={{ filter: 'drop-shadow(0px 0px 6px rgba(255, 255, 255, 0.6))' }} />
+                    <Area 
+                        type="monotone" 
+                        dataKey="Forecast_Range" 
+                        name="95% Confidence" 
+                        stroke="none" 
+                        fill="#00ff88" 
+                        fillOpacity={0.15} 
+                        isAnimationActive={true} 
+                        animationDuration={1000}
+                    />
+                    <Line 
+                        type="monotone" 
+                        dataKey="Forecast_Mean" 
+                        name="AI FORECAST" 
+                        stroke="#00ff88" 
+                        strokeWidth={2} 
+                        dot={false} 
+                        style={{ filter: 'drop-shadow(0px 0px 6px rgba(255, 255, 255, 0.6))' }} 
+                        isAnimationActive={true}
+                        animationDuration={1000}
+                    />
                   </>
                 )}
               </ComposedChart>
             </ResponsiveContainer>
           </div>
-        </div>
-      )}
+      </div>
     </div>
   )
 }
