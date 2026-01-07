@@ -1,7 +1,7 @@
 # Strategies
 import pandas as pd
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
 # --- HELPER FUNCTIONS ---
 def calculate_rsi(series, period=14):
@@ -133,6 +133,75 @@ def apply_ml_strategy(df):
     test_data['Cumulative_Strategy'] = test_data['Cumulative_Strategy'] / test_data['Cumulative_Strategy'].iloc[0]
     
     return test_data
+
+def predict_future_prices(df, days=21):
+    """
+    Forecasting Engine:
+    1. Trains Random Forest on historical returns.
+    2. Recursively predicts next 21 days.
+    3. Simulates Confidence Intervals using historical volatility.
+    """
+    data = df.copy()
+    
+    # --- 1. Feature Engineering ---
+    data['RSI'] = calculate_rsi(data['Close'], 14)
+    data['Return_1d'] = data['Close'].pct_change()
+    data['Return_5d'] = data['Close'].pct_change(5)
+    data['Vol_20'] = data['Close'].rolling(20).std()
+    data['SMA_20'] = data['Close'].rolling(20).mean()
+    data['Dist_SMA'] = (data['Close'] - data['SMA_20']) / data['SMA_20']
+    
+    data.dropna(inplace=True)
+
+    # --- 2. Train Regressor ---
+    # Target: The Magnitude of tomorrow's return
+    data['Target_Return'] = data['Return_1d'].shift(-1)
+    train_data = data.dropna()
+    
+    X = train_data[['RSI', 'Return_1d', 'Return_5d', 'Vol_20', 'Dist_SMA']]
+    y = train_data['Target_Return']
+    
+    model = RandomForestRegressor(n_estimators=100, min_samples_leaf=5, random_state=42)
+    model.fit(X, y)
+    
+    # Calculate error for Confidence Intervals
+    residuals = y - model.predict(X)
+    uncertainty_std = residuals.std()
+
+    # --- 3. Recursive Forecasting ---
+    future_dates = pd.date_range(start=data.index[-1] + pd.Timedelta(days=1), periods=days, freq='B')
+    current_row = data.iloc[[-1]].copy()
+    last_price = current_row['Close'].values[0]
+    
+    forecast_results = []
+    
+    # Calculate the Base Price (Last known close) to normalize everything
+    base_price = data['Close'].iloc[-1]
+
+    for i, date in enumerate(future_dates):
+        features = current_row[['RSI', 'Return_1d', 'Return_5d', 'Vol_20', 'Dist_SMA']]
+        pred_return = model.predict(features)[0]
+        
+        # Calculate Future Price
+        next_price = last_price * (1 + pred_return)
+        
+        # Confidence Intervals (expanding over time)
+        vol_scaling = np.sqrt(i + 1)
+        upper_band = next_price * (1 + (1.96 * uncertainty_std * vol_scaling))
+        lower_band = next_price * (1 - (1.96 * uncertainty_std * vol_scaling))
+        
+        # Save as RATIOS (relative to the last known price) so we can plot it on the cumulative chart
+        forecast_results.append({
+            "Date": date.strftime("%Y-%m-%d"),
+            "Forecast_Ratio": next_price / base_price,
+            "Upper_Ratio": upper_band / base_price,
+            "Lower_Ratio": lower_band / base_price
+        })
+        
+        last_price = next_price
+        current_row['Return_1d'] = pred_return # Update state for next step
+        
+    return forecast_results
 
 def calculate_performance_metrics(series):
     """Computes key financial metrics"""

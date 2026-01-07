@@ -17,7 +17,7 @@ import pandas as pd
 import numpy as np
 
 # Custom Modules
-from strategies import apply_sma_strategy, apply_mean_reversion_strategy, apply_ml_strategy, calculate_performance_metrics
+from strategies import apply_sma_strategy, apply_mean_reversion_strategy, apply_ml_strategy, predict_future_prices, calculate_performance_metrics
 from portfolio import calculate_correlation_matrix, calculate_portfolio_metrics, simulate_portfolio
 from report import generate_daily_report
 
@@ -317,8 +317,23 @@ def backtest_ml(
     
     return {"metrics": metrics, "data": result}
 
+@app.get("/api/forecast/ml/{ticker}")
+def get_ml_forecast(ticker: str, period: str = "2y"):
+    df = fetch_data_with_retry(ticker, period=period, interval="1d")
+    
+    if len(df) < 100:
+         raise HTTPException(status_code=400, detail="Not enough data for forecast")
+
+    try:
+        # We also return the last cumulative return of the backtest logic 
+        # so the frontend knows where to attach the forecast line.
+        forecast_data = predict_future_prices(df, days=21)
+        return {"ticker": ticker, "forecast": forecast_data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ========================================
-# PORTFOLIO ENDPOINTS - QUANT B
+# PORTFOLIO ENDPOINTS 
 # ========================================
 
 @app.post("/api/portfolio/data")

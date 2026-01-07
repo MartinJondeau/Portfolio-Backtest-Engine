@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { 
-  LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
+  LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart 
 } from 'recharts'
 import PortfolioView from './PortfolioView'
 import LiveBadge from './LiveBadge'
@@ -446,53 +446,77 @@ function StrategiesView() {
   const [error, setError] = useState(null)
   const [isAutoRefresh, setIsAutoRefresh] = useState(true)
   const [lastUpdated, setLastUpdated] = useState(null)
-
+  const [showForecast, setShowForecast] = useState(false)
+  const [forecastData, setForecastData] = useState([])
   const fetchData = async () => {
     setError(null)
-    setData([]) // Clear old data to prevent mixing
+    setData([])           // Clear old graph
+    setForecastData([])   // Clear old forecast
     setMetrics(null)
 
     try {
-      let url = null // Initialize as null
+      let url = null
 
-      // --- URL CONSTRUCTION ---
+      // --- 1. CONSTRUCT BACKTEST URL ---
       if (strategy === 'SMA') {
         url = `/api/backtest/sma/${ticker}?short_window=${shortWindow}&long_window=${longWindow}&period=${period}&timeframe=${timeframe}`
       } else if (strategy === 'MeanReversion') {
         url = `/api/backtest/mean-reversion/${ticker}?window=${window}&threshold=${threshold}&period=${period}&timeframe=${timeframe}`
       } else if (strategy === 'ML_RandomForest') {
-        // ML strategy endpoint
         url = `/api/backtest/ml/${ticker}?period=${period}&timeframe=${timeframe}`
       }
 
-      // Safety: If no URL matched, stop here
       if (!url) {
         console.error("Unknown Strategy selected")
         return
       }
 
+      // --- 2. FETCH MAIN BACKTEST DATA ---
       const response = await axios.get(url)
 
-      // 🛡️ CRASH PROTECTION: Check if data exists before setting it
       if (response.data && response.data.data) {
+        // Success: Load the main chart
         setData(response.data.data)
         setMetrics(response.data.metrics)
         setLastUpdated(new Date().toLocaleTimeString())
+
+        // --- 3. FETCH FORECAST (Conditional) ---
+        // Only if Strategy is ML AND Checkbox is Checked
+        if (strategy === 'ML_RandomForest' && showForecast) {
+           try {
+             // We pass 'period' to ensure the model uses the same history depth as the backtest
+             const forecastUrl = `/api/forecast/ml/${ticker}?period=${period}`
+             const forecastRes = await axios.get(forecastUrl)
+             
+             if (forecastRes.data && forecastRes.data.forecast) {
+                setForecastData(forecastRes.data.forecast)
+                console.log("✅ Forecast loaded")
+             }
+           } catch (forecastErr) {
+             console.error("⚠️ Forecast failed:", forecastErr)
+             // We do NOT set the main 'error' state here, because we want 
+             // the user to still see the Backtest chart even if Forecast fails.
+           }
+        }
+
       } else {
         setError("⚠️ Received empty data from server.")
       }
 
     } catch (err) {
+      // --- MAIN ERROR HANDLING ---
       console.error("Fetch error:", err)
       if (err.response) {
         const status = err.response.status
         const msg = err.response.data.detail
-        // Handle specific ML errors (like not enough data)
-        if (status === 400) setError(`⚠️ ${msg}`) 
+        
+        if (status === 400) setError(`⚠️ Parameter Error: ${msg}`) 
         else if (status === 404) setError(`❌ Ticker Not Found: ${msg}`)
         else setError(`Server Error (${status}): ${msg}`)
-      } else {
+      } else if (err.request) {
         setError("🔌 Cannot connect to Backend. Ensure Python is running.")
+      } else {
+        setError("An unexpected error occurred.")
       }
     }
   }
@@ -509,6 +533,38 @@ function StrategiesView() {
     }
     return () => { if (interval) clearInterval(interval) }
   }, [isAutoRefresh, error, ticker, strategy, shortWindow, longWindow, window, threshold, period, timeframe])
+
+// --- HELPER: Merge History + Forecast for Charting ---
+  const getPlotData = () => {
+    // 1. Standard Checks
+    if (!showForecast || forecastData.length === 0 || strategy !== 'ML_RandomForest') {
+      return data;
+    }
+    if (data.length === 0) return [];
+
+    // 2. Identify the crossover point (Last day of history)
+    const historyMinusLast = data.slice(0, data.length - 1); // All days except the last
+    const lastPoint = data[data.length - 1]; // The specific crossover day
+    const baseValue = lastPoint.Cumulative_Strategy; 
+    
+    // 3. Create a "Bridge Point" 
+    // This single point contains BOTH the end of the Green line AND the start of the White line
+    const bridgePoint = {
+      ...lastPoint, // Keeps 'Cumulative_Strategy' (Green line ends here)
+      Forecast_Mean: baseValue, // White line starts here
+      Forecast_Range: [baseValue, baseValue] // Cone starts here (width 0)
+    };
+
+    // 4. Transform the rest of the forecast data
+    const forecastPlot = forecastData.map(f => ({
+       Date: f.Date,
+       Forecast_Mean: f.Forecast_Ratio * baseValue,
+       Forecast_Range: [f.Lower_Ratio * baseValue, f.Upper_Ratio * baseValue]
+    }));
+
+    // 5. Combine: [History (T-n...T-1)] + [Bridge (T)] + [Forecast (T+1...)]
+    return [...historyMinusLast, bridgePoint, ...forecastPlot];
+  }
 
   return (
     <div style={{ padding: '40px', width: '100%', maxWidth: '1600px', margin: '0 auto' }}>
@@ -540,7 +596,20 @@ function StrategiesView() {
           <option value="MeanReversion">MEAN REVERSION</option>
           <option value="ML_RandomForest">RANDOM FOREST</option>
         </select>
-
+        {/* ML Forecast Checkbox */}
+        {strategy === 'ML_RandomForest' && (
+           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '10px' }}>
+             <label style={{ color: '#ff8c00', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', cursor: 'pointer', fontFamily: 'Consolas, monospace' }}>
+               <input 
+                 type="checkbox" 
+                 checked={showForecast} 
+                 onChange={(e) => setShowForecast(e.target.checked)}
+                 style={{ accentColor: '#ff8c00', marginRight: '8px', cursor: 'pointer' }}
+               />
+               ENABLE AI FORECAST (21 DAYS)
+             </label>
+           </div>
+        )}
         <input value={ticker} onChange={(e) => setTicker(e.target.value.toUpperCase())} placeholder="TICKER" style={{ minWidth: '150px' }} />
 
         {/* DYNAMIC PARAMETER INPUTS */}
@@ -602,15 +671,67 @@ function StrategiesView() {
           </h3>
           <div style={{ width: '100%', height: 450 }}>
             <ResponsiveContainer>
-              <LineChart data={data}>
+              <ComposedChart data={getPlotData()}>
+                
                 <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                <XAxis dataKey="Date" stroke="#777" />
-                <YAxis stroke="#777" />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="Cumulative_Market" name="BUY & HOLD" stroke="#00d4ff" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="Cumulative_Strategy" name={`STRATEGY (${strategy})`} stroke="#00ff88" dot={false} strokeWidth={3} />
-              </LineChart>
+                <XAxis dataKey="Date" stroke="#777" tick={{fontSize: 10}} minTickGap={30} />
+                <YAxis stroke="#777" domain={['auto', 'auto']} tick={{fontSize: 10}} />
+                
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#111', border: '1px solid #333', fontSize: '12px' }}
+                  itemStyle={{ color: '#ccc' }}
+                  labelStyle={{ color: '#ff8c00', fontWeight: 'bold' }}
+                />
+                
+                <Legend wrapperStyle={{ paddingTop: '20px' }} />
+
+                {/* --- 1. HISTORICAL DATA --- */}
+                <Line 
+                  type="monotone" 
+                  dataKey="Cumulative_Market" 
+                  name="BUY & HOLD" 
+                  stroke="#00d4ff" 
+                  dot={false} 
+                  strokeWidth={2} 
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="Cumulative_Strategy" 
+                  name={`STRATEGY (${strategy})`} 
+                  stroke="#00ff88" 
+                  dot={false} 
+                  strokeWidth={3} 
+                />
+
+                {/* --- 2. FORECAST VISUALIZATION (Halo & Cone) --- */}
+                {showForecast && (
+                  <>
+                    {/* The Transparent Cone (Confidence Interval) */}
+                    <Area 
+                      type="monotone" 
+                      dataKey="Forecast_Range" 
+                      name="95% Confidence"
+                      stroke="none" 
+                      fill="green" 
+                      fillOpacity={0.3} 
+                    />
+                    
+                    {/* The White Halo Line (Mean Forecast) */}
+                    <Line 
+                      type="monotone" 
+                      dataKey="Forecast_Mean" 
+                      name="AI FORECAST" 
+                      stroke="#00ff88" 
+                      strokeWidth={3} 
+                      dot={false} 
+                      // 'strokeDasharray' is removed to make it continuous/solid
+                      // We add a subtle shadow to make it 'glow'
+                      style={{ filter: 'drop-shadow(0px 0px 4px rgba(21, 255, 0, 0.5))' }}
+                    />
+                  </>
+                )}
+
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         </div>
