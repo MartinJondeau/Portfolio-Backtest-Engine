@@ -72,47 +72,44 @@ def simulate_portfolio(
     rebalance_frequency: str = "never"
 ) -> pd.DataFrame:
     """
-    Simulate portfolio performance with given weights and rebalancing frequency
-    
-    Args:
-        assets_data: Dictionary of ticker -> DataFrame with prices
-        weights: Dictionary of ticker -> weight (if None, use equal weights)
-        rebalance_frequency: 'never', 'monthly', 'quarterly', 'yearly'
-    
-    Returns:
-        DataFrame with portfolio cumulative returns
+    Simule la performance du portefeuille. 
+    Cette fonction génère les données de base pour le graphique sur TOUTE la période.
     """
-    # Combine all close prices
+    # 1. Combiner tous les prix de clôture
     prices = pd.DataFrame()
     for ticker, df in assets_data.items():
         if 'Close' in df.columns:
             prices[ticker] = df['Close']
     
-    # Calculate returns
+    # 2. Calculer les rendements
+    # Note : dropna() aligne tous les actifs sur la date la plus récente commune
     returns = prices.pct_change().dropna()
     
-    # Set weights (equal weight if not specified)
+    # 3. Définir les poids (poids égaux si non spécifiés)
     if weights is None:
         n_assets = len(returns.columns)
         weights = {ticker: 1/n_assets for ticker in returns.columns}
     
-    # Convert weights to array aligned with returns columns
+    # 4. Aligner les poids avec les colonnes de rendements
     weights_array = np.array([weights.get(col, 0) for col in returns.columns])
     
-    # Normalize weights to sum to 1
-    weights_array = weights_array / weights_array.sum()
+    # Normalisation pour que la somme soit égale à 1
+    if weights_array.sum() > 0:
+        weights_array = weights_array / weights_array.sum()
     
-    # Calculate portfolio returns
+    # 5. Calculer les rendements du portefeuille
     if rebalance_frequency == "never":
-        # Simple weighted sum of returns
+        # Somme pondérée simple
         portfolio_returns = (returns * weights_array).sum(axis=1)
     else:
-        # Implement rebalancing logic
+        # Logique de rééquilibrage périodique
         portfolio_returns = rebalance_portfolio(returns, weights_array, rebalance_frequency)
     
-    # Calculate cumulative returns
+    # 6. Calculer les rendements cumulés
+    # On commence à 1.0 au début de la période de données téléchargée
     portfolio_cumulative = (1 + portfolio_returns).cumprod()
     
+    # 7. Construire le DataFrame de résultat
     result = pd.DataFrame({
         'Date': portfolio_cumulative.index,
         'Portfolio_Return': portfolio_returns.values,
