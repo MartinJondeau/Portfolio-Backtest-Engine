@@ -160,8 +160,4 @@ Project created for **ESILV - Financial Engineering (M.Eng)**.
 
 ```
 
-### Important: Create the `requirements.txt`
-The README mentions `pip install -r requirements.txt`, but we haven't created that file yet. To make the instructions true, run this command in your Backend terminal before you push to GitHub:
-
-```powershell
-pip freeze > requirements.txt
+ `pip install -r requirements.txt`
