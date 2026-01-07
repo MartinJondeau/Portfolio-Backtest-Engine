@@ -888,7 +888,7 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
       {/* Metrics */}
       {metrics && (
         <div className="grid-container" style={{ marginBottom: '35px' }}>
-          <MetricCard title="TOTAL RETURN" value={metrics["Total Return"]} color="#00ff88" />
+          <MetricCard title="TOTAL RETURN" value={metrics["Total Return"]} color={metrics["Total Return"].includes("-") ? "#ff4444" : "#00ff88"} />          
           <MetricCard title="SHARPE RATIO" value={metrics["Sharpe Ratio"]} color="#00d4ff" />
           <MetricCard title="VOLATILITY" value={metrics["Volatility"]} color="#ffa500" />
           <MetricCard title="MAX DRAWDOWN" value={metrics["Max Drawdown"]} color="#ff4444" />

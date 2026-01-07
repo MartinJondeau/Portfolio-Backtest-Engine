@@ -17,7 +17,7 @@ import pandas as pd
 import numpy as np
 
 # Custom Modules
-from strategies import apply_sma_strategy, apply_mean_reversion_strategy, calculate_performance_metrics
+from strategies import apply_sma_strategy, apply_mean_reversion_strategy, apply_ml_strategy, calculate_performance_metrics
 from portfolio import calculate_correlation_matrix, calculate_portfolio_metrics, simulate_portfolio
 from report import generate_daily_report
 
@@ -234,7 +234,7 @@ def backtest_sma(
     
     return {"metrics": metrics, "data": result}
 
-# --- Strategy: Mean Reversion (QUANT A) ---
+# --- Strategy: Mean Reversion ---
 @app.get("/api/backtest/mean-reversion/{ticker}")
 def backtest_mean_reversion(
     ticker: str, 
@@ -264,6 +264,55 @@ def backtest_mean_reversion(
     
     result = processed_data[[
         'Date', 'Cumulative_Market', 'Cumulative_Strategy', 'Signal', 'Z_Score'
+    ]].to_dict(orient='records')
+    
+    return {"metrics": metrics, "data": result}
+
+# --- Strategy: ML Random Forest (Trend Follower) ---
+@app.get("/api/backtest/ml/{ticker}")
+def backtest_ml(
+    ticker: str, 
+    period: str = "2y",   # Default to 2y for better training data
+    timeframe: str = "daily"
+):
+    # Validation
+    # ML needs history, so we restrict very short periods
+    valid_periods = ["6mo", "1y", "2y", "5y", "10y", "max"]
+    timeframe_mapping = {"daily": "1d", "weekly": "1wk", "monthly": "1mo"}
+    
+    if period not in valid_periods:
+        raise HTTPException(status_code=400, detail=f"Invalid period for ML. Needs history. Allowed: {valid_periods}")
+    if timeframe not in timeframe_mapping:
+        raise HTTPException(status_code=400, detail="Invalid timeframe.")
+
+    # Fetch Data
+    df = fetch_data_with_retry(ticker, period=period, interval=timeframe_mapping[timeframe])
+
+    # Safety Check: ML needs enough rows for 70/30 split
+    if len(df) < 100:
+        raise HTTPException(status_code=400, detail=f"Not enough data points ({len(df)}) to train the model. Choose a longer period.")
+
+    # Apply Strategy
+    try:
+        # returns ONLY the Out-of-Sample (Test) data
+        processed_data = apply_ml_strategy(df) 
+        metrics = calculate_performance_metrics(processed_data['Strategy_Return'])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"ML Model Training Failed: {str(e)}")
+
+    # Format
+    processed_data.reset_index(inplace=True)
+    
+    # Handle Date column naming variations
+    if 'Date' not in processed_data.columns:
+        processed_data.rename(columns={'index': 'Date'}, inplace=True)
+        
+    processed_data['Date'] = pd.to_datetime(processed_data['Date']).dt.strftime('%Y-%m-%d')
+    processed_data.replace([np.inf, -np.inf], 0, inplace=True)
+    processed_data.fillna(0, inplace=True)
+    
+    result = processed_data[[
+        'Date', 'Cumulative_Market', 'Cumulative_Strategy', 'Signal'
     ]].to_dict(orient='records')
     
     return {"metrics": metrics, "data": result}

@@ -428,13 +428,19 @@ function SingleAssetView() {
 // ========================================
 function StrategiesView() {
   const [ticker, setTicker] = useState('AAPL')
+  
+  // Strategy Parameters
   const [shortWindow, setShortWindow] = useState(20)
   const [longWindow, setLongWindow] = useState(50)
   const [window, setWindow] = useState(20)
   const [threshold, setThreshold] = useState(2.0)
+  
+  // Global Settings
   const [period, setPeriod] = useState('1y')
   const [timeframe, setTimeframe] = useState('daily')
   const [strategy, setStrategy] = useState('SMA')
+  
+  // Data State
   const [data, setData] = useState([])
   const [metrics, setMetrics] = useState(null)
   const [error, setError] = useState(null)
@@ -443,32 +449,50 @@ function StrategiesView() {
 
   const fetchData = async () => {
     setError(null)
+    setData([]) // Clear old data to prevent mixing
+    setMetrics(null)
+
     try {
-      let url = ''
+      let url = null // Initialize as null
+
+      // --- URL CONSTRUCTION ---
       if (strategy === 'SMA') {
         url = `/api/backtest/sma/${ticker}?short_window=${shortWindow}&long_window=${longWindow}&period=${period}&timeframe=${timeframe}`
       } else if (strategy === 'MeanReversion') {
         url = `/api/backtest/mean-reversion/${ticker}?window=${window}&threshold=${threshold}&period=${period}&timeframe=${timeframe}`
+      } else if (strategy === 'ML_RandomForest') {
+        // ML strategy endpoint
+        url = `/api/backtest/ml/${ticker}?period=${period}&timeframe=${timeframe}`
+      }
+
+      // Safety: If no URL matched, stop here
+      if (!url) {
+        console.error("Unknown Strategy selected")
+        return
       }
 
       const response = await axios.get(url)
-      setData(response.data.data)
-      setMetrics(response.data.metrics)
-      setLastUpdated(new Date().toLocaleTimeString())
+
+      // 🛡️ CRASH PROTECTION: Check if data exists before setting it
+      if (response.data && response.data.data) {
+        setData(response.data.data)
+        setMetrics(response.data.metrics)
+        setLastUpdated(new Date().toLocaleTimeString())
+      } else {
+        setError("⚠️ Received empty data from server.")
+      }
 
     } catch (err) {
       console.error("Fetch error:", err)
       if (err.response) {
         const status = err.response.status
         const msg = err.response.data.detail
-        if (status === 404) setError(`❌ Ticker Not Found: ${msg}`)
-        else if (status === 400) setError(`⚠️ Parameter Error: ${msg}`)
-        else if (status === 503) setError(`📡 Data Source Error: ${msg}`)
+        // Handle specific ML errors (like not enough data)
+        if (status === 400) setError(`⚠️ ${msg}`) 
+        else if (status === 404) setError(`❌ Ticker Not Found: ${msg}`)
         else setError(`Server Error (${status}): ${msg}`)
-      } else if (err.request) {
-        setError("🔌 Cannot connect to Backend. Ensure Python is running.")
       } else {
-        setError("An unexpected error occurred.")
+        setError("🔌 Cannot connect to Backend. Ensure Python is running.")
       }
     }
   }
@@ -509,23 +533,36 @@ function StrategiesView() {
 
       {/* Controls */}
       <div className="controls" style={{ display: 'flex', gap: '15px', marginBottom: '35px', flexWrap: 'wrap' }}>
+        
+        {/* STRATEGY SELECTOR */}
         <select value={strategy} onChange={(e) => setStrategy(e.target.value)} style={{ minWidth: '150px' }}>
           <option value="SMA">SMA CROSSOVER</option>
           <option value="MeanReversion">MEAN REVERSION</option>
+          <option value="ML_RandomForest">RANDOM FOREST</option>
         </select>
 
         <input value={ticker} onChange={(e) => setTicker(e.target.value.toUpperCase())} placeholder="TICKER" style={{ minWidth: '150px' }} />
 
-        {strategy === 'SMA' ? (
+        {/* DYNAMIC PARAMETER INPUTS */}
+        {strategy === 'SMA' && (
           <>
             <input type="number" value={shortWindow} onChange={(e) => setShortWindow(e.target.value)} placeholder="SHORT" style={{ width: '80px' }} />
             <input type="number" value={longWindow} onChange={(e) => setLongWindow(e.target.value)} placeholder="LONG" style={{ width: '80px' }} />
           </>
-        ) : (
+        )}
+
+        {strategy === 'MeanReversion' && (
           <>
             <input type="number" value={window} onChange={(e) => setWindow(e.target.value)} placeholder="WINDOW" style={{ width: '80px' }} />
             <input type="number" step="0.1" value={threshold} onChange={(e) => setThreshold(e.target.value)} placeholder="Z-SCORE" style={{ width: '80px' }} />
           </>
+        )}
+
+        {/* ML has no user-tunable params here (it learns automatically), so we show nothing or a label */}
+        {strategy === 'ML_RandomForest' && (
+           <div style={{ display: 'flex', alignItems: 'center', color: '#666', fontSize: '11px', fontStyle: 'italic', paddingLeft: '10px' }}>
+             (Params: Auto-Optimized)
+           </div>
         )}
 
         <select value={period} onChange={(e) => setPeriod(e.target.value)}>
@@ -550,7 +587,7 @@ function StrategiesView() {
       {/* Strategy Metrics */}
       {metrics && (
         <div className="grid-container" style={{ marginBottom: '35px' }}>
-          <StrategyMetricCard title="TOTAL RETURN" value={metrics["Total Return"]} color="#00ff88" />
+          <StrategyMetricCard title="TOTAL RETURN" value={metrics["Total Return"]} color={metrics["Total Return"].includes("-") ? "#ff4444" : "#00ff88"} />          
           <StrategyMetricCard title="SHARPE RATIO" value={metrics["Sharpe Ratio"]} color="#00d4ff" />
           <StrategyMetricCard title="VOLATILITY" value={metrics["Volatility"]} color="#ffa500" />
           <StrategyMetricCard title="MAX DRAWDOWN" value={metrics["Max Drawdown"]} color="#ff4444" />
@@ -561,7 +598,7 @@ function StrategiesView() {
       {data.length > 0 && (
         <div className="bloomberg-panel" style={{ padding: '30px' }}>
           <h3 style={{ fontSize: '13px', fontWeight: '800', color: '#ff8c00', letterSpacing: '2px', marginBottom: '25px', textTransform: 'uppercase' }}>
-            CUMULATIVE PERFORMANCE
+            CUMULATIVE PERFORMANCE {strategy === 'ML_RandomForest' ? '(OUT-OF-SAMPLE / TEST SET)' : ''}
           </h3>
           <div style={{ width: '100%', height: 450 }}>
             <ResponsiveContainer>
