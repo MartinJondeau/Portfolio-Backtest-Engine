@@ -5,24 +5,34 @@ import axios from 'axios';
 
 export default function LiveBadge({ ticker }) {
     const [quote, setQuote] = useState(null);
-    const [error, setError] = useState(false); // New Error State
-
-    const fetchQuote = async () => {
-        try {
-            setError(false);
-            const res = await axios.get(`/api/asset/${ticker}/realtime`);
-            setQuote(res.data);
-        } catch (err) {
-            console.error(err);
-            setError(true); // Trigger error mode
-        }
-    };
+    const [error, setError] = useState(false);
 
     useEffect(() => {
-        fetchQuote(); 
-        const interval = setInterval(fetchQuote, 60000); // 60s is better than 5s for rate limits
-        return () => clearInterval(interval); 
-    }, [ticker]);
+        // 1. Define the function INSIDE the effect to avoid dependency warnings
+        const fetchQuote = async () => {
+            try {
+                // Reset error before trying
+                setError(false);
+                const res = await axios.get(`/api/asset/${ticker}/realtime`);
+                setQuote(res.data);
+            } catch (err) {
+                console.error("LiveBadge Fetch Error:", err);
+                setError(true);
+            }
+        };
+
+        // 2. Call immediately on mount (or when ticker changes)
+        fetchQuote();
+
+        // 3. Set up the interval (60 seconds)
+        const interval = setInterval(fetchQuote, 60000);
+
+        // 4. Cleanup on unmount or ticker change
+        return () => clearInterval(interval);
+        
+    }, [ticker]); // The effect depends ONLY on the ticker
+
+    // --- RENDER LOGIC (Unchanged) ---
 
     // Handle Error State in UI
     if (error) return (
@@ -32,6 +42,7 @@ export default function LiveBadge({ ticker }) {
     );
 
     if (!quote) return <div style={{ color: '#888' }}>Loading...</div>;
+    
     const isPositive = quote.change >= 0;
     const color = isPositive ? '#4CAF50' : '#F44336';
 
