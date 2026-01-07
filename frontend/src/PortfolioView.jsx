@@ -108,7 +108,7 @@ const removeTicker = (tickerToRemove) => {
         weights: weightsPayload
       }
 
-      const response = await axios.post('http://127.0.0.1:8001/api/portfolio/backtest-strategies', payload)
+      const response = await axios.post('/api/portfolio/backtest-strategies', payload)
 
       setPortfolioData(response.data.portfolio_data)
       setMetrics(response.data.metrics)
@@ -130,7 +130,7 @@ const removeTicker = (tickerToRemove) => {
         })
       }
 
-      const response = await axios.post('http://127.0.0.1:8001/api/portfolio/backtest', {
+      const response = await axios.post('/api/portfolio/backtest', {
         tickers: tickers,
         weights: weights,
         rebalance_frequency: rebalanceFreq,
@@ -218,7 +218,7 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
 
   const fetchCorrelation = async () => {
     try {
-      const response = await axios.post('http://127.0.0.1:8001/api/portfolio/correlation', {
+      const response = await axios.post('/api/portfolio/correlation', {
         tickers: tickers,
         period: period
       })
@@ -865,17 +865,12 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
       {/* Metrics */}
       {metrics && (
         <div className="grid-container" style={{ marginBottom: '35px' }}>
-            <MetricCard 
-        title="TOTAL RETURN" 
-        value={metrics["Total Return"]} 
-        // Logique : si la chaîne contient '-', on affiche en rouge, sinon en vert
-        color={metrics["Total Return"].includes('-') ? "#ff4444" : "#00ff88"} 
-        />
-        <MetricCard title="SHARPE RATIO" value={metrics["Sharpe Ratio"]} color="#00d4ff" />
-        <MetricCard title="VOLATILITY" value={metrics["Volatility"]} color="#ffa500" />
-        <MetricCard title="MAX DRAWDOWN" value={metrics["Max Drawdown"]} color="#ff4444" />
-    </div>
-    )}
+          <MetricCard title="TOTAL RETURN" value={metrics["Total Return"]} color={metrics["Total Return"].includes("-") ? "#ff4444" : "#00ff88"} />          
+          <MetricCard title="SHARPE RATIO" value={metrics["Sharpe Ratio"]} color="#00d4ff" />
+          <MetricCard title="VOLATILITY" value={metrics["Volatility"]} color="#ffa500" />
+          <MetricCard title="MAX DRAWDOWN" value={metrics["Max Drawdown"]} color="#ff4444" />
+        </div>
+      )}
 
       {/* Correlation Matrix */}
       {correlation && (
