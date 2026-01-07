@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import LiveBadge from './components/LiveBadge'
+import StrategyMetricCard from './components/StrategyMetricCard'
 
 export default function PortfolioView() {
   const [tickers, setTickers] = useState(['AAPL', 'MSFT', 'GOOGL'])
@@ -469,10 +470,10 @@ export default function PortfolioView() {
       {/* 4. RESULTS SECTION */}
       {metrics && (
         <div className="grid-container" style={{ marginBottom: '25px' }}>
-          <MetricCard title="TOTAL RETURN" value={metrics["Total Return"]} color={metrics["Total Return"].includes("-") ? "#ff4444" : "#00ff88"} />          
-          <MetricCard title="SHARPE RATIO" value={metrics["Sharpe Ratio"]} color="#00d4ff" />
-          <MetricCard title="VOLATILITY" value={metrics["Volatility"]} color="#ffa500" />
-          <MetricCard title="MAX DRAWDOWN" value={metrics["Max Drawdown"]} color="#ff4444" />
+          <StrategyMetricCard title="TOTAL RETURN" value={metrics["Total Return"]} color={metrics["Total Return"].includes("-") ? "#ff4444" : "#00ff88"} />          
+          <StrategyMetricCard title="SHARPE RATIO" value={metrics["Sharpe Ratio"]} color="#00d4ff" />
+          <StrategyMetricCard title="VOLATILITY" value={metrics["Volatility"]} color="#ffa500" />
+          <StrategyMetricCard title="MAX DRAWDOWN" value={metrics["Max Drawdown"]} color="#ff4444" />
         </div>
       )}
 
@@ -498,7 +499,7 @@ export default function PortfolioView() {
                         <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #333' }} itemStyle={{ fontSize: '12px' }} />
                         <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                         
-                        <Line type="monotone" dataKey="Portfolio_Cumulative" name="PORTFOLIO" stroke="var(--text-main)" strokeWidth={3} dot={false} />
+                        <Line type="monotone" dataKey="Portfolio_Cumulative" name="PORTFOLIO" stroke="var(--text-main)" strokeWidth={2} dot={false} />
                         {Object.keys(individualAssets).map((ticker, i) => (
                            <Line key={ticker} type="monotone" dataKey={d => individualAssets[ticker][portfolioData.indexOf(d)]} name={ticker} stroke={['#00d4ff','#00ff88','#fbbf24', '#ec4899', '#a855f7'][i%5]} strokeWidth={1} dot={false} strokeDasharray="5 5" />
                         ))}
@@ -558,23 +559,6 @@ export default function PortfolioView() {
 
     </div>
   )
-}
-
-// --- SUB-COMPONENTS ---
-
-function MetricCard({ title, value, color }) {
-  let displayColor = color;
-  if (title === "TOTAL RETURN" || title.includes("P&L")) {
-    displayColor = value && value.includes('-') ? "#ff4444" : "#00ff88";
-  }
-
-  return (
-    <div className="metric-card bloomberg-panel" style={{ padding: '25px', position: 'relative', overflow: 'hidden', backgroundColor: '#141414', border: '1px solid #333' }}>
-      <div style={{ position: 'absolute', top: 0, right: 0, width: '100px', height: '100px', background: `radial-gradient(circle, ${displayColor}15, transparent)`, pointerEvents: 'none' }}></div>
-      <div style={{ fontSize: '10px', color: '#666', fontWeight: '800', letterSpacing: '2px', marginBottom: '12px' }}>{title}</div>
-      <div style={{ fontSize: '28px', fontWeight: '900', color: displayColor, fontFamily: 'Consolas, monospace', textShadow: `0 0 15px ${displayColor}40` }}>{value}</div>
-    </div>
-  );
 }
 
 function CorrelationMatrix({ data, tickers }) {

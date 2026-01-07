@@ -263,7 +263,7 @@ export default function StrategiesView() {
                             name="BUY & HOLD" 
                             stroke="#00d4ff" 
                             dot={false} 
-                            strokeWidth={2} 
+                            strokeWidth={1.5} 
                             isAnimationActive={true} 
                             animationDuration={1500}
                         />
@@ -273,7 +273,7 @@ export default function StrategiesView() {
                             name={`STRATEGY (${strategy})`} 
                             stroke="#00ff88" 
                             dot={false} 
-                            strokeWidth={3} 
+                            strokeWidth={2} 
                             isAnimationActive={true}
                             animationDuration={1500}
                         />
