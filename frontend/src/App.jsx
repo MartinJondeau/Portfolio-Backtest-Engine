@@ -84,7 +84,43 @@ function App() {
             </p>
           </div>
         </div>
-        <Clock />
+        {/* --- RIGHT SIDE: CLOCK + DOWNLOAD BUTTON --- */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          
+          <Clock />
+
+          <button
+            onClick={() => window.open('/api/report/download', '_blank')}
+            style={{
+              background: '#1a1a1a',
+              border: '1px solid #00ff88',
+              color: '#00ff88',
+              padding: '10px 15px',
+              fontFamily: 'Consolas, monospace',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              borderRadius: '4px',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#00ff88';
+              e.currentTarget.style.color = '#000';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#1a1a1a';
+              e.currentTarget.style.color = '#00ff88';
+            }}
+          >
+            <span></span> EXCEL REPORT
+          </button>
+        </div>
+        {/* ------------------------------------------- */}
       </header>
 
       {/* Navigation */}

@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 # Third-party libraries
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import yfinance as yf
 import pandas as pd
@@ -484,7 +484,9 @@ def backtest_portfolio_with_strategies(request: dict):
         weights_series = pd.Series(weights)
     
     portfolio_returns = (returns_df * weights_series).sum(axis=1)
-    
+
+    start_date_parsed=None
+
     # Filter data by start_date if provided
     if start_date:
         try:
@@ -546,21 +548,24 @@ def backtest_portfolio_with_strategies(request: dict):
 
 
 # --- Reporting (QUANT A) ---
-@app.get("/api/reports/latest")
-def get_latest_report():
-    reports_dir = "reports"
-    if not os.path.exists(reports_dir):
-        raise HTTPException(status_code=404, detail="Reports directory not found.")
+@app.get("/api/report/download")
+async def download_report():
+    try:
+        # Run the generation logic
+        file_path = generate_daily_report()
         
-    list_of_files = glob.glob(f'{reports_dir}/*.json') 
-    if not list_of_files:
-        raise HTTPException(status_code=404, detail="No reports found. Run report.py first.")
-        
-    latest_file = max(list_of_files, key=os.path.getctime)
-    
-    with open(latest_file, 'r') as f:
-        data = json.load(f)
-    return data
+        # 🛡️ SAFETY CHECK: Did the function return a value?
+        if file_path is None:
+            return {"error": "Report generation failed. Function returned None."}
+            
+        # Send the Excel file to the browser
+        return FileResponse(
+            path=file_path, 
+            filename=file_path.name, 
+            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.post("/api/reports/generate")
 def trigger_daily_report(background_tasks: BackgroundTasks):
