@@ -962,3 +962,227 @@
 2026-01-07 17:53:48,979 [INFO] Successfully fetched 251 rows for AAPL
 2026-01-07 17:58:49,345 [INFO] Fetching AAPL (Attempt 1/3)
 2026-01-07 17:58:49,572 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:09:14,200 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:09:14,461 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:09:17,810 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:09:18,045 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:09:20,887 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:09:21,081 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:09:26,597 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:09:26,840 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:09:29,539 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:09:29,769 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:09:30,105 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:09:30,312 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:11:08,695 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:11:08,982 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:11:09,026 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:11:09,252 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:11:13,997 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:11:14,254 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:11:16,906 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:11:17,114 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:11:20,803 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:11:21,028 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:11:31,573 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:11:31,780 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:11:35,754 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:11:35,970 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:11:42,707 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:11:42,887 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:13:23,434 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:13:23,660 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:13:26,605 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:13:26,824 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:13:30,479 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:13:30,714 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:13:33,319 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:13:33,435 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:13:51,598 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:13:51,881 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:14:25,656 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:14:25,873 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:14:29,627 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:14:29,822 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:15:08,253 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:15:08,523 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:15:12,371 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:15:12,596 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:15:16,369 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:15:16,579 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-07 18:15:23,010 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:15:23,286 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:16:29,126 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:16:29,394 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-07 18:16:40,801 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:16:41,043 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-07 18:16:41,373 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:16:41,598 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-07 18:16:47,363 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:16:47,626 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:16:48,050 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:16:48,355 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:16:55,154 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:16:55,392 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-07 18:16:55,684 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:16:55,907 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-07 18:17:47,465 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:17:47,759 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:17:52,293 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:17:52,533 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-07 18:17:57,489 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:17:57,742 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-07 18:18:03,245 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:18:03,480 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-07 18:18:09,370 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:18:09,628 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-07 18:18:09,952 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:18:10,181 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-07 18:18:18,196 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:18:18,465 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:18:18,901 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:18:19,145 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:19:35,618 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:19:35,930 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:21:03,928 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:21:04,196 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:21:07,075 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:21:07,286 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:21:56,338 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:21:56,549 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:22:00,395 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:22:00,609 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:22:04,065 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:22:04,306 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:22:25,825 [INFO] Fetching TSLA (Attempt 1/3)
+2026-01-07 18:22:26,044 [INFO] Successfully fetched 1256 rows for TSLA
+2026-01-07 18:23:09,788 [INFO] Fetching TSLA (Attempt 1/3)
+2026-01-07 18:23:10,121 [INFO] Successfully fetched 1256 rows for TSLA
+2026-01-07 18:23:14,873 [INFO] Fetching TSLA (Attempt 1/3)
+2026-01-07 18:23:15,075 [INFO] Successfully fetched 1256 rows for TSLA
+2026-01-07 18:23:19,678 [INFO] Fetching TSLA (Attempt 1/3)
+2026-01-07 18:23:19,837 [INFO] Successfully fetched 502 rows for TSLA
+2026-01-07 18:23:23,663 [INFO] Fetching TSLA (Attempt 1/3)
+2026-01-07 18:23:23,860 [INFO] Successfully fetched 251 rows for TSLA
+2026-01-07 18:23:30,636 [INFO] Fetching TSLA (Attempt 1/3)
+2026-01-07 18:23:30,811 [INFO] Successfully fetched 251 rows for TSLA
+2026-01-07 18:23:31,094 [INFO] Fetching TSLA (Attempt 1/3)
+2026-01-07 18:23:31,242 [INFO] Successfully fetched 251 rows for TSLA
+2026-01-07 18:23:37,464 [INFO] Fetching TSLA (Attempt 1/3)
+2026-01-07 18:23:37,631 [INFO] Successfully fetched 502 rows for TSLA
+2026-01-07 18:23:37,938 [INFO] Fetching TSLA (Attempt 1/3)
+2026-01-07 18:23:38,089 [INFO] Successfully fetched 502 rows for TSLA
+2026-01-07 18:23:47,131 [INFO] Fetching TSLA (Attempt 1/3)
+2026-01-07 18:23:47,309 [INFO] Successfully fetched 251 rows for TSLA
+2026-01-07 18:23:53,522 [INFO] Fetching TSLA (Attempt 1/3)
+2026-01-07 18:23:53,654 [INFO] Successfully fetched 251 rows for TSLA
+2026-01-07 18:23:53,967 [INFO] Fetching TSLA (Attempt 1/3)
+2026-01-07 18:23:54,125 [INFO] Successfully fetched 251 rows for TSLA
+2026-01-07 18:24:27,151 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:24:27,408 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:24:35,410 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:24:35,706 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:24:36,231 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:24:36,470 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:24:43,382 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:24:43,653 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:26:13,652 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:26:13,946 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:26:14,465 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:26:14,613 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:27:09,958 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:27:10,233 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:27:15,368 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:27:15,604 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:27:16,039 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:27:16,287 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:27:53,846 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:27:54,106 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:27:54,142 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:27:54,377 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:27:59,721 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:27:59,952 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:28:04,102 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:28:04,206 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:28:06,990 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:28:07,203 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:28:07,474 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:28:07,718 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:28:14,872 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:28:15,113 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:28:15,560 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:28:15,803 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:28:29,297 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:28:29,553 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:28:35,414 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:28:35,706 [INFO] Successfully fetched 1256 rows for AAPL
+2026-01-07 18:29:59,165 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:29:59,491 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:29:59,539 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:29:59,829 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:30:04,901 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:30:05,084 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:30:09,491 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:30:09,697 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:30:09,993 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:30:10,189 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:30:17,664 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:30:17,877 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:30:24,047 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:30:24,238 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:31:06,472 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:31:06,749 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:31:10,400 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:31:10,509 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:31:15,256 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:31:15,641 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:31:20,809 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:31:21,028 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:31:25,696 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:31:25,895 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:31:26,121 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:31:26,428 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:32:02,384 [INFO] Fetching SD (Attempt 1/3)
+2026-01-07 18:32:02,564 [INFO] Successfully fetched 251 rows for SD
+2026-01-07 18:32:02,890 [INFO] Fetching SD (Attempt 1/3)
+2026-01-07 18:32:03,003 [INFO] Successfully fetched 251 rows for SD
+2026-01-07 18:32:09,293 [INFO] Fetching SD (Attempt 1/3)
+2026-01-07 18:32:09,549 [INFO] Successfully fetched 1256 rows for SD
+2026-01-07 18:32:10,012 [INFO] Fetching SD (Attempt 1/3)
+2026-01-07 18:32:10,224 [INFO] Successfully fetched 1256 rows for SD
+2026-01-07 18:32:24,594 [INFO] Fetching SD (Attempt 1/3)
+2026-01-07 18:32:24,862 [INFO] Successfully fetched 1256 rows for SD
+2026-01-07 18:34:05,637 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:34:06,130 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:34:06,286 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:34:06,535 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:35:56,995 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:35:57,354 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:35:57,669 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:35:57,988 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:38:18,704 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:38:19,138 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:38:19,219 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:38:19,487 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:38:29,899 [ERROR] $VOL: possibly delisted; no price data found  (period=1y)
+2026-01-07 18:40:00,245 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:40:00,663 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:40:00,763 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:40:01,007 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:40:09,319 [ERROR] HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: GIBBERISH"}}}
+2026-01-07 18:40:09,826 [ERROR] $GIBBERISH: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-07 18:40:47,036 [ERROR] HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: GIBBERISH"}}}
+2026-01-07 18:40:47,442 [ERROR] $GIBBERISH: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-07 18:41:07,073 [ERROR] $GIBBERISH: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-07 18:41:18,421 [ERROR] $GIBBERISH: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2026-01-07 18:43:13,253 [ERROR] $SSH: possibly delisted; no price data found  (period=1y)
+2026-01-07 18:45:01,436 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:45:01,662 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:46:09,592 [ERROR] $APPO: possibly delisted; no price data found  (period=5y)
+2026-01-07 18:46:10,775 [ERROR] $APPO: possibly delisted; no price data found  (1d 1927-02-01 -> 2026-01-07)
+2026-01-07 18:46:46,286 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:46:46,502 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:46:53,848 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:46:54,332 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-07 18:46:54,582 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-07 18:46:54,810 [INFO] Successfully fetched 251 rows for AAPL
