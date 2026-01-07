@@ -19,8 +19,6 @@ function PortfolioView() {
   const [startDate, setStartDate] = useState('')
   const [initialAmount, setInitialAmount] = useState('')
   const [hasRealSimulation, setHasRealSimulation] = useState(false)
-  const [graphTimeWindow, setGraphTimeWindow] = useState('all')
-
   // Initialize custom weights when tickers change
   useEffect(() => {
     const equalWeight = (100 / tickers.length).toFixed(1)
@@ -39,19 +37,17 @@ function PortfolioView() {
     }
   }
 
-  const removeTicker = (tickerToRemove) => {
-    if (tickers.length > 3) {
-      const newTickers = tickers.filter(t => t !== tickerToRemove)
-      setTickers(newTickers)
+  // Dans PortfolioView.jsx
+const removeTicker = (tickerToRemove) => {
+  // Suppression de la condition "if (tickers.length > 3)"
+  const newTickers = tickers.filter(t => t !== tickerToRemove);
+  setTickers(newTickers);
 
-      // Remove from custom weights
-      const newWeights = { ...customWeights }
-      delete newWeights[tickerToRemove]
-      setCustomWeights(newWeights)
-    } else {
-      alert('MINIMUM 3 TICKERS REQUIRED')
-    }
-  }
+  // Nettoyage des poids personnalisés
+  const newWeights = { ...customWeights };
+  delete newWeights[tickerToRemove];
+  setCustomWeights(newWeights);
+};
 
   const handleWeightChange = (ticker, value) => {
     setCustomWeights({
@@ -76,6 +72,10 @@ function PortfolioView() {
   }
 
   const runBacktest = async () => {
+    if (tickers.length < 3) {
+    alert("ERREUR : Le portfolio nécessite au moins 3 actifs pour l'analyse.");
+    return;
+  }
   try {
     // Check if using individual strategies
     const useIndividualStrategies = Object.keys(assetStrategies).length > 0
@@ -149,86 +149,63 @@ function PortfolioView() {
 }
 
 const simulatePnL = () => {
-  // Validate inputs
+  // 1. Validation des entrées
   if (!startDate || !initialAmount || parseFloat(initialAmount) <= 0) {
-    alert('PLEASE ENTER BOTH START DATE AND INITIAL AMOUNT')
-    return
+    alert('PLEASE ENTER BOTH START DATE AND INITIAL AMOUNT');
+    return;
   }
 
   if (portfolioData.length === 0) {
-    alert('PLEASE EXECUTE A BACKTEST FIRST')
-    return
+    alert('PLEASE EXECUTE A BACKTEST FIRST');
+    return;
   }
 
   try {
-    // Filter portfolio data by start date
-    let filteredData = portfolioData
-    if (startDate) {
-      filteredData = portfolioData.filter(row => new Date(row.Date) >= new Date(startDate))
+    // 2. Trouver l'entrée de données la plus proche de la date d'investissement choisie
+    const targetDate = new Date(startDate);
+    // On cherche l'index de la première date supérieure ou égale à la date sélectionnée
+    const startIndex = portfolioData.findIndex(row => new Date(row.Date) >= targetDate);
+
+    if (startIndex === -1) {
+      alert('THE SELECTED START DATE IS OUTSIDE THE BACKTEST RANGE');
+      return;
     }
 
-    if (filteredData.length === 0) {
-      alert('NO DATA AVAILABLE FOR THE SELECTED START DATE')
-      return
-    }
+    // 3. Récupérer les données filtrées pour le calcul financier uniquement
+    const simulationPeriodData = portfolioData.slice(startIndex);
 
-    // Get initial and final portfolio cumulative returns
-    const initialReturn = filteredData[0].Portfolio_Cumulative || filteredData[0].Cumulative_Portfolio
-    const finalReturn = filteredData[filteredData.length - 1].Portfolio_Cumulative || filteredData[filteredData.length - 1].Cumulative_Portfolio
+    // 4. Calcul du P&L basé sur le multiplicateur entre la date choisie et la fin
+    // Nous utilisons Portfolio_Cumulative (format standard) ou Cumulative_Portfolio (format stratégie)
+    const initialCumulative = simulationPeriodData[0].Portfolio_Cumulative || simulationPeriodData[0].Cumulative_Portfolio;
+    const finalCumulative = simulationPeriodData[simulationPeriodData.length - 1].Portfolio_Cumulative || simulationPeriodData[simulationPeriodData.length - 1].Cumulative_Portfolio;
 
-    // Calculate P&L in euros
-    const amount = parseFloat(initialAmount)
-    const initialValue = amount
-    const finalValue = (finalReturn / initialReturn) * amount
-    const totalPnL = finalValue - initialValue
-    const totalPnLPct = (totalPnL / initialValue) * 100
+    const amount = parseFloat(initialAmount);
+    const initialValue = amount;
+    // Formule : (Valeur finale / Valeur au jour d'entrée) * Montant investi
+    const finalValue = (finalCumulative / initialCumulative) * amount;
+    const totalPnL = finalValue - initialValue;
+    const totalPnLPct = (totalPnL / initialValue) * 100;
 
-    // Update metrics with P&L data
+    // 5. Mise à jour des métriques pour l'affichage Simulation
     setMetrics(prevMetrics => ({
       ...prevMetrics,
       "Initial Investment": `€${initialValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       "Final Value": `€${finalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       "Total P&L": `€${totalPnL.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       "Total P&L %": `${totalPnLPct.toFixed(2)}%`
-    }))
+    }));
 
-    setHasRealSimulation(true)
+    setHasRealSimulation(true);
   } catch (error) {
-    console.error('Error calculating P&L:', error)
-    alert('ERROR CALCULATING P&L')
+    console.error('Error calculating P&L:', error);
+    alert('ERROR CALCULATING P&L');
   }
-}
+};
 
+// Dans PortfolioView.jsx
 const getFilteredGraphData = () => {
-  if (portfolioData.length === 0) return []
-
-  if (graphTimeWindow === 'all') return portfolioData
-
-  // Calculate cutoff date based on selected window
-  const now = new Date(portfolioData[portfolioData.length - 1].Date)
-  let cutoffDate = new Date(now)
-
-  switch (graphTimeWindow) {
-    case '1mo':
-      cutoffDate.setMonth(cutoffDate.getMonth() - 1)
-      break
-    case '3mo':
-      cutoffDate.setMonth(cutoffDate.getMonth() - 3)
-      break
-    case '6mo':
-      cutoffDate.setMonth(cutoffDate.getMonth() - 6)
-      break
-    case '1y':
-      cutoffDate.setFullYear(cutoffDate.getFullYear() - 1)
-      break
-    case '5y':
-      cutoffDate.setFullYear(cutoffDate.getFullYear() - 5)
-      break
-    default:
-      return portfolioData
-  }
-
-  return portfolioData.filter(row => new Date(row.Date) >= cutoffDate)
+  // On ne filtre plus, on retourne les données telles qu'elles arrivent du backend
+  return portfolioData;
 }
 
 const handleStrategyChange = (ticker, strategy, params = {}) => {
@@ -927,43 +904,7 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
               PORTFOLIO CUMULATIVE PERFORMANCE
             </h3>
 
-            {/* Time Window Selector */}
-            <div style={{ display: 'flex', gap: '10px' }}>
-              {['1mo', '3mo', '6mo', '1y', '5y', 'all'].map(window => (
-                <button
-                  key={window}
-                  onClick={() => setGraphTimeWindow(window)}
-                  style={{
-                    background: graphTimeWindow === window
-                      ? 'linear-gradient(135deg, #ff8c00 0%, #ffa500 100%)'
-                      : 'rgba(255, 140, 0, 0.1)',
-                    border: graphTimeWindow === window ? 'none' : '1px solid #ff8c00',
-                    color: graphTimeWindow === window ? '#000' : '#ff8c00',
-                    padding: '8px 16px',
-                    borderRadius: '2px',
-                    fontSize: '10px',
-                    fontWeight: '800',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s',
-                    textTransform: 'uppercase',
-                    letterSpacing: '1px',
-                    fontFamily: 'Consolas, monospace'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (graphTimeWindow !== window) {
-                      e.target.style.background = 'rgba(255, 140, 0, 0.2)'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (graphTimeWindow !== window) {
-                      e.target.style.background = 'rgba(255, 140, 0, 0.1)'
-                    }
-                  }}
-                >
-                  {window === 'all' ? 'ALL' : window.toUpperCase()}
-                </button>
-              ))}
-            </div>
+
           </div>
 
           <div style={{ width: '100%', height: 450 }}>
@@ -1208,6 +1149,12 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
 }
 
 function MetricCard({ title, value, color }) {
+  // Détermination dynamique de la couleur pour le Total Return
+  let displayColor = color;
+  if (title === "TOTAL RETURN") {
+    displayColor = value.includes('-') ? "#ff4444" : "#00ff88";
+  }
+
   return (
     <div className="metric-card bloomberg-panel" style={{
       padding: '25px',
@@ -1220,7 +1167,7 @@ function MetricCard({ title, value, color }) {
         right: 0,
         width: '100px',
         height: '100px',
-        background: `radial-gradient(circle, ${color}15, transparent)`,
+        background: `radial-gradient(circle, ${displayColor}15, transparent)`,
         pointerEvents: 'none'
       }}></div>
       <div style={{
@@ -1236,14 +1183,14 @@ function MetricCard({ title, value, color }) {
       <div style={{
         fontSize: '32px',
         fontWeight: '900',
-        color: color,
+        color: displayColor,
         fontFamily: 'Consolas, monospace',
-        textShadow: `0 0 15px ${color}40`
+        textShadow: `0 0 15px ${displayColor}40`
       }}>
         {value}
       </div>
     </div>
-  )
+  );
 }
 
 function CorrelationMatrix({ data, tickers }) {

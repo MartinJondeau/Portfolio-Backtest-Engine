@@ -83,7 +83,7 @@ def simulate_portfolio(
     Returns:
         DataFrame with portfolio cumulative returns
     """
-    # Combine all close prices
+    # 1. Combiner tous les prix de clôture
     prices = pd.DataFrame()
     for ticker, df in assets_data.items():
         if "Close" in df.columns:
@@ -105,7 +105,7 @@ def simulate_portfolio(
 
     # Calculate portfolio returns
     if rebalance_frequency == "never":
-        # Simple weighted sum of returns
+        # Somme pondérée simple
         portfolio_returns = (returns * weights_array).sum(axis=1)
     else:
         # Implement rebalancing logic
