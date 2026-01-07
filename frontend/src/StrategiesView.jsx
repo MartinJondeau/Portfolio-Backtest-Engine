@@ -28,8 +28,10 @@ export default function StrategiesView() {
   const [showForecast, setShowForecast] = useState(false)
   const [forecastData, setForecastData] = useState([])
   
-  // Fetching state
+  // Fetching state (used for button logic only)
   const [isFetching, setIsFetching] = useState(false)
+  // Animation Key: Changes on every fetch to force the chart to re-animate
+  const [chartKey, setChartKey] = useState(0)
 
   const fetchData = async () => {
     if (isFetching) return;
@@ -37,8 +39,7 @@ export default function StrategiesView() {
     setIsFetching(true)
     setError(null)
     
-    // 1. DO NOT CLEAR DATA. 
-    // This allows the Chart component to stay mounted.
+    // NOTE: We do NOT clear data here. Old chart stays visible.
 
     try {
       let url = null
@@ -59,12 +60,12 @@ export default function StrategiesView() {
       const response = await axios.get(url)
 
       if (response.data && response.data.data) {
-        // 2. JUST UPDATE THE STATE.
-        // Recharts detects the new props and attempts to "morph" the line 
-        // from the old coordinates to the new ones.
         setData(response.data.data)
         setMetrics(response.data.metrics)
         setLastUpdated(new Date().toLocaleTimeString())
+        
+        // Increment key to trigger the smooth "draw" animation on the new data
+        setChartKey(prev => prev + 1) 
 
         // Handle Forecast
         let newForecast = [];
@@ -100,7 +101,7 @@ export default function StrategiesView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) 
 
-  // Auto-refresh
+  // Auto-refresh logic
   useEffect(() => {
     let interval = null
     if (isAutoRefresh) {
@@ -224,8 +225,11 @@ export default function StrategiesView() {
           </h3>
           
           <div style={{ width: '100%', height: 450 }}>
-            {/* 3. NO KEYS HERE. Just let it update. */}
-            <ResponsiveContainer>
+            {/* We use the `key={chartKey}` on ResponsiveContainer.
+               Each time data updates, we change the key, forcing Recharts 
+               to re-run the entry animation.
+            */}
+            <ResponsiveContainer key={chartKey}>
               <ComposedChart data={getPlotData()}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="Date" stroke="var(--text-muted)" tick={{fontSize: 10}} minTickGap={40} />
@@ -237,9 +241,7 @@ export default function StrategiesView() {
                 />
                 <Legend />
 
-                {/* 4. ENABLE ANIMATION (but not Key-based). 
-                   isAnimationActive={true} allows Recharts to interpolate values. 
-                */}
+                {/* ANIMATION IS BACK: duration set to 1.5s for smooth draw */}
                 <Line 
                     type="monotone" 
                     dataKey="Cumulative_Market" 
@@ -248,7 +250,7 @@ export default function StrategiesView() {
                     dot={false} 
                     strokeWidth={2} 
                     isAnimationActive={true} 
-                    animationDuration={1000} // Smooth transition
+                    animationDuration={1500}
                 />
                 <Line 
                     type="monotone" 
@@ -258,7 +260,7 @@ export default function StrategiesView() {
                     dot={false} 
                     strokeWidth={3} 
                     isAnimationActive={true}
-                    animationDuration={1000}
+                    animationDuration={1500}
                 />
 
                 {showForecast && (
@@ -271,7 +273,7 @@ export default function StrategiesView() {
                         fill="#00ff88" 
                         fillOpacity={0.15} 
                         isAnimationActive={true} 
-                        animationDuration={1000}
+                        animationDuration={1500}
                     />
                     <Line 
                         type="monotone" 
@@ -282,7 +284,7 @@ export default function StrategiesView() {
                         dot={false} 
                         style={{ filter: 'drop-shadow(0px 0px 6px rgba(255, 255, 255, 0.6))' }} 
                         isAnimationActive={true}
-                        animationDuration={1000}
+                        animationDuration={1500}
                     />
                   </>
                 )}
