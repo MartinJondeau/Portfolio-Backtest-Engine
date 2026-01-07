@@ -200,7 +200,7 @@ function SingleAssetView() {
     for (const item of watchlist) {
       const ticker = item.symbol
       try {
-        const response = await axios.get(`http://127.0.0.1:8001/api/asset/${ticker}?period=${period}`)
+        const response = await axios.get(`/api/asset/${ticker}?period=${period}`)
         const rawData = response.data
         
         const prices = rawData.map(d => d.Close)
@@ -410,9 +410,9 @@ function StrategiesView() {
     try {
       let url = ''
       if (strategy === 'SMA') {
-        url = `http://127.0.0.1:8001/api/backtest/sma/${ticker}?short_window=${shortWindow}&long_window=${longWindow}&period=${period}&timeframe=${timeframe}`
+        url = `/api/backtest/sma/${ticker}?short_window=${shortWindow}&long_window=${longWindow}&period=${period}&timeframe=${timeframe}`
       } else if (strategy === 'MeanReversion') {
-        url = `http://127.0.0.1:8001/api/backtest/mean-reversion/${ticker}?window=${window}&threshold=${threshold}&period=${period}&timeframe=${timeframe}`
+        url = `/api/backtest/mean-reversion/${ticker}?window=${window}&threshold=${threshold}&period=${period}&timeframe=${timeframe}`
       }
 
       const response = await axios.get(url)

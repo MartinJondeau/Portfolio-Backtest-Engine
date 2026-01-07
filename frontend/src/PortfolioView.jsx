@@ -108,7 +108,7 @@ function PortfolioView() {
         weights: weightsPayload
       }
 
-      const response = await axios.post('http://127.0.0.1:8001/api/portfolio/backtest-strategies', payload)
+      const response = await axios.post('/api/portfolio/backtest-strategies', payload)
 
       setPortfolioData(response.data.portfolio_data)
       setMetrics(response.data.metrics)
@@ -130,7 +130,7 @@ function PortfolioView() {
         })
       }
 
-      const response = await axios.post('http://127.0.0.1:8001/api/portfolio/backtest', {
+      const response = await axios.post('/api/portfolio/backtest', {
         tickers: tickers,
         weights: weights,
         rebalance_frequency: rebalanceFreq,
@@ -241,7 +241,7 @@ const handleStrategyChange = (ticker, strategy, params = {}) => {
 
   const fetchCorrelation = async () => {
     try {
-      const response = await axios.post('http://127.0.0.1:8001/api/portfolio/correlation', {
+      const response = await axios.post('/api/portfolio/correlation', {
         tickers: tickers,
         period: period
       })
