@@ -1,4 +1,3 @@
-// src/components/StrategyMetricCard.jsx
 export default function StrategyMetricCard({ title, value, color }) {
   const finalColor = color || '#ffffff';
 

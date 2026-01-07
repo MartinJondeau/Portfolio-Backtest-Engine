@@ -156,15 +156,12 @@ export default function StrategiesView() {
           <div style={{ width: '4px', height: '32px', background: 'var(--color-primary)', boxShadow: '0 0 12px var(--color-primary-glow)' }}></div>
           <div>
             <h2 style={{ fontSize: '18px', color: 'var(--color-primary)', margin: 0 }}>ADVANCED STRATEGIES</h2>
-            {lastUpdated && <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Last Updated: {lastUpdated}</div>}
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <button onClick={() => setIsAutoRefresh(!isAutoRefresh)} style={{ background: 'var(--bg-surface)', border: '1px solid var(--color-primary)', color: 'var(--color-primary)' }}>
+          <button onClick={() => setIsAutoRefresh(!isAutoRefresh)} style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-surface)', color: 'var(--text-muted)' }}>
             {isAutoRefresh ? 'PAUSE' : 'RESUME'}
           </button>
-          
-          {/* 👇 KEY CHANGE HERE: Pass isLive={isAutoRefresh} 👇 */}
           <LiveBadge ticker={ticker} isLive={isAutoRefresh} />
         </div>
       </div>
