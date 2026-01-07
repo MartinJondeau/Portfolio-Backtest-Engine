@@ -155,9 +155,5 @@ We follow a strict **Feature Branch Workflow**:
 
 ## 📝 License
 
-Project created for **ESILV - Financial Engineering (M.Eng)**.
+Project created for **ESILV - Finance Department**.
 *Authors: Adrien BAYRE & Martin JONDEAU*
-
-```
-
- `pip install -r requirements.txt`
