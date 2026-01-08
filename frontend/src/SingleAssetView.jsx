@@ -3,7 +3,7 @@ import axios from 'axios'
 import { AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
 export default function SingleAssetView() {
-  const colors = ['#ff8c00', '#00ff88', '#00d4ff', '#ff4444', '#d264ff', '#ffff00']
+  const colors = ['#ff8c00', '#00ff88', '#00d4ff', '#ff4444', '#a855f7', '#ffff00', '#0059ffff', '#ec4899']
 
   const [watchlist, setWatchlist] = useState([
     { symbol: 'AAPL', color: colors[0] },

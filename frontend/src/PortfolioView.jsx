@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import LiveBadge from './components/LiveBadge'
 import StrategyMetricCard from './components/StrategyMetricCard'
 
@@ -22,6 +22,7 @@ export default function PortfolioView() {
   const [isAutoRefresh, setIsAutoRefresh] = useState(true)
   const [lastUpdated, setLastUpdated] = useState(null)
   const [isFetching, setIsFetching] = useState(false)
+  const [chartKey, setChartKey] = useState(0) // Animation Key
   
   // Individual Strategy State
   const [assetStrategies, setAssetStrategies] = useState({})
@@ -134,11 +135,23 @@ export default function PortfolioView() {
         })
       }
 
-      setPortfolioData(response.data.portfolio_data)
+      // --- ROBUST DATA NORMALIZATION (CRITICAL FIX) ---
+      const normalizedData = response.data.portfolio_data.map(row => ({
+        ...row,
+        Portfolio_Cumulative:
+          row.Portfolio_Cumulative ??
+          row.Cumulative_Portfolio ??
+          null
+      }));
+
+      setPortfolioData(normalizedData);
       setMetrics(response.data.metrics)
       setIndividualAssets(response.data.individual_assets)
       setHasRealSimulation(false)
       setLastUpdated(new Date().toLocaleTimeString())
+      
+      // Force Re-render
+      setChartKey(prev => prev + 1)
 
     } catch (error) {
       console.error('Error:', error)
@@ -147,6 +160,20 @@ export default function PortfolioView() {
         setIsFetching(false);
     }
   }
+
+  // --- CHART DATA PRE-CALCULATION (CRITICAL FIX) ---
+  const chartData = useMemo(() => {
+    if (!portfolioData || portfolioData.length === 0) return [];
+    
+    return portfolioData.map((row, i) => {
+      const merged = { ...row };
+      Object.keys(individualAssets).forEach(ticker => {
+        // Safely access index i, default to null if missing
+        merged[ticker] = individualAssets[ticker]?.[i] ?? null;
+      });
+      return merged;
+    });
+  }, [portfolioData, individualAssets]);
 
   const simulatePnL = () => {
     if (!startDate || !initialAmount || parseFloat(initialAmount) <= 0) {
@@ -233,90 +260,90 @@ export default function PortfolioView() {
         </div>
       </div>
 
-      {/* 2. CONTROL BAR (Restored "Large Bar" Background) */}
-<div
-  className="controls"
-  style={{
-    display: 'flex',
-    alignItems: 'center',
-    gap: '20px'
-  }}
->
-  {/* A. ADD TICKER (LEFT) */}
-  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-    <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '14px' }}>
-      ASSETS
-    </h3>
-
-    <input
-      value={newTicker}
-      onChange={(e) => setNewTicker(e.target.value.toUpperCase())}
-      onKeyDown={(e) => e.key === 'Enter' && addTicker()}
-      placeholder="ADD TICKER..."
-      style={{ width: '140px' }}
-    />
-
-    <button
-      onClick={addTicker}
-      style={{
-        width: '30px',
-        height: '30px',
-        fontSize: '20px',
-        padding: 0,
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}
-    >
-      +
-    </button>
-  </div>
-
-  {/* B. DATE SELECTORS — PUSHED RIGHT */}
-  <div
-    style={{
-      display: 'flex',
-      gap: '6px',
-      alignItems: 'center',
-      marginLeft: 'auto'   // THIS IS THE KEY
-    }}
-  >
-    {['1mo', '3mo', '6mo', '1y', '2y', '5y'].map(p => (
-      <button
-        key={p}
-        onClick={() => setPeriod(p)}
+      {/* 2. CONTROL BAR */}
+      <div
+        className="controls"
         style={{
-          background: period === p ? 'var(--color-primary)' : 'transparent',
-          color: period === p ? '#000' : 'var(--text-muted)',
-          border: period === p ? 'none' : '1px solid var(--border-strong)',
-          padding: '6px 12px'
+          display: 'flex',
+          alignItems: 'center',
+          gap: '20px'
         }}
       >
-        {p}
-      </button>
-    ))}
-  </div>
+        {/* A. ADD TICKER (LEFT) */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '14px' }}>
+            ASSETS
+          </h3>
 
-  {/* C. CONFIG */}
-  <div style={{ display: 'flex', gap: '10px' }}>
-    <select value={weightStrategy} onChange={(e) => setWeightStrategy(e.target.value)}>
-      <option value="equal">EQUAL WEIGHT</option>
-      <option value="custom">CUSTOM WEIGHT</option>
-    </select>
+          <input
+            value={newTicker}
+            onChange={(e) => setNewTicker(e.target.value.toUpperCase())}
+            onKeyDown={(e) => e.key === 'Enter' && addTicker()}
+            placeholder="ADD TICKER..."
+            style={{ width: '140px' }}
+          />
 
-    <select value={rebalanceFreq} onChange={(e) => setRebalanceFreq(e.target.value)}>
-      <option value="never">NO REBALANCING</option>
-      <option value="monthly">MONTHLY</option>
-      <option value="quarterly">QUARTERLY</option>
-      <option value="yearly">YEARLY</option>
-    </select>
-  </div>
+          <button
+            onClick={addTicker}
+            style={{
+              width: '30px',
+              height: '30px',
+              fontSize: '20px',
+              padding: 0,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            +
+          </button>
+        </div>
 
-  {/* D. EXECUTE */}
-  <button onClick={runBacktest} disabled={isFetching}>
-    {isFetching ? 'EXECUTING...' : 'EXECUTE'}
-  </button>
-</div>
+        {/* B. DATE SELECTORS — PUSHED RIGHT */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '6px',
+            alignItems: 'center',
+            marginLeft: 'auto'
+          }}
+        >
+          {['1mo', '3mo', '6mo', '1y', '2y', '5y'].map(p => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              style={{
+                background: period === p ? 'var(--color-primary)' : 'transparent',
+                color: period === p ? '#000' : 'var(--text-muted)',
+                border: period === p ? 'none' : '1px solid var(--border-strong)',
+                padding: '6px 12px'
+              }}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+
+        {/* C. CONFIG */}
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <select value={weightStrategy} onChange={(e) => setWeightStrategy(e.target.value)}>
+            <option value="equal">EQUAL WEIGHT</option>
+            <option value="custom">CUSTOM WEIGHT</option>
+          </select>
+
+          <select value={rebalanceFreq} onChange={(e) => setRebalanceFreq(e.target.value)}>
+            <option value="never">NO REBALANCING</option>
+            <option value="monthly">MONTHLY</option>
+            <option value="quarterly">QUARTERLY</option>
+            <option value="yearly">YEARLY</option>
+          </select>
+        </div>
+
+        {/* D. EXECUTE */}
+        <button onClick={runBacktest} disabled={isFetching}>
+          {isFetching ? 'EXECUTING...' : 'EXECUTE'}
+        </button>
+      </div>
 
 
       {/* 3. ASSET CONFIGURATION GRID (3 Columns) */}
@@ -406,8 +433,9 @@ export default function PortfolioView() {
                             value={assetStrategies[ticker]?.strategy || 'buy_hold'}
                             onChange={(e) => {
                                 const strat = e.target.value;
-                                const defaultParams = strat === 'sma' ? { short_window: 20, long_window: 50 } : 
-                                                    strat === 'mean_reversion' ? { window: 20, threshold: 2.0 } : {};
+                                let defaultParams = {};
+                                if (strat === 'sma') defaultParams = { short_window: 20, long_window: 50 };
+                                else if (strat === 'mean_reversion') defaultParams = { window: 20, threshold: 2.0 };
                                 handleStrategyChange(ticker, strat, defaultParams);
                             }}
                             style={{ 
@@ -424,6 +452,7 @@ export default function PortfolioView() {
                             <option value="buy_hold">STRATEGY: BUY & HOLD</option>
                             <option value="sma">STRATEGY: SMA CROSSOVER</option>
                             <option value="mean_reversion">STRATEGY: MEAN REVERSION</option>
+                            <option value="ML_RandomForest">STRATEGY: RANDOM FOREST</option>
                         </select>
                     </div>
 
@@ -478,10 +507,12 @@ export default function PortfolioView() {
       )}
 
       {/* 5. CHART & CORRELATION */}
-      {portfolioData.length > 0 && (
+      {chartData.length > 0 && (
         <>
             <div className="bloomberg-panel" style={{ padding: '24px', minHeight: '500px', marginBottom: '30px', backgroundColor: '#141414', border: '1px solid #333' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                
+                {/* HEADER */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                     <h3 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
                         CUMULATIVE PERFORMANCE
                     </h3>
@@ -489,19 +520,73 @@ export default function PortfolioView() {
                         VIEW CORRELATION MATRIX
                     </button>
                 </div>
+
+                {/* CUSTOM LEGEND */}
+                <div style={{ display: 'flex', gap: 32, marginBottom: 16 }}>
+                    {/* Portfolio Legend Item */}
+                    <div style={{ fontSize: 11 }}>
+                        <div style={{ color: 'var(--text-muted)', marginBottom: 6 }}>
+                            PORTFOLIO
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ width: 12, height: 2, background: '#FFFFFF' }} />
+                            COMBINED RETURN
+                        </div>
+                    </div>
+
+                    {/* Constituents Legend Item */}
+                    <div style={{ fontSize: 11 }}>
+                        <div style={{ color: 'var(--text-muted)', marginBottom: 6 }}>
+                            CONSTITUENTS
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
+                            {Object.keys(individualAssets).map((ticker, i) => (
+                                <div key={ticker} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <svg width="12" height="2" style={{ marginRight: 0 }}>
+                                        <line x1="0" y1="1" x2="12" y2="1" stroke={['#00d4ff','#00ff88','#fbbf24', '#ec4899', '#a855f7','#ff8c00', '#ff4444', '#0059ffff'][i%5]} strokeWidth="1" strokeDasharray="3 2" />
+                                    </svg>
+                                    {ticker}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
                 
                 <div style={{ width: '100%', height: 450 }}>
-                    <ResponsiveContainer>
-                    <LineChart data={portfolioData}>
+                    <ResponsiveContainer key={chartKey}>
+                    <LineChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
                         <XAxis dataKey="Date" stroke="var(--text-muted)" tick={{fontSize: 10}} minTickGap={40} />
                         <YAxis stroke="var(--text-muted)" domain={['auto', 'auto']} tick={{fontSize: 10}} />
                         <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #333' }} itemStyle={{ fontSize: '12px' }} formatter={(value) => typeof value === 'number' ? value.toFixed(5) : value} />
-                        <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                         
-                        <Line type="monotone" dataKey="Portfolio_Cumulative" name="PORTFOLIO" stroke="var(--text-main)" strokeWidth={2} dot={false} />
+                        {/* PORTFOLIO LINE - FORCE WHITE AND CONNECT NULLS */}
+                        <Line 
+                            type="monotone" 
+                            dataKey="Portfolio_Cumulative" 
+                            name="PORTFOLIO" 
+                            stroke="#FFFFFF" 
+                            strokeWidth={2} 
+                            dot={false}
+                            connectNulls={true} 
+                            isAnimationActive={true}
+                            animationDuration={1500}
+                        />
+                        
                         {Object.keys(individualAssets).map((ticker, i) => (
-                           <Line key={ticker} type="monotone" dataKey={d => individualAssets[ticker][portfolioData.indexOf(d)]} name={ticker} stroke={['#00d4ff','#00ff88','#fbbf24', '#ec4899', '#a855f7'][i%5]} strokeWidth={1} dot={false} strokeDasharray="5 5" />
+                           <Line 
+                                key={ticker} 
+                                type="monotone" 
+                                dataKey={ticker} 
+                                name={ticker} 
+                                stroke={['#00d4ff','#00ff88','#fbbf24', '#ec4899', '#a855f7','#ff8c00', '#ff4444', '#0059ffff'][i%5]} 
+                                strokeWidth={1} 
+                                dot={false} 
+                                strokeDasharray="3 2"
+                                connectNulls={true} 
+                                isAnimationActive={true}
+                                animationDuration={1500}
+                            />
                         ))}
                     </LineChart>
                     </ResponsiveContainer>
