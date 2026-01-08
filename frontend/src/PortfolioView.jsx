@@ -44,8 +44,10 @@ export default function PortfolioView() {
   }, [tickers])
 
   const addTicker = () => {
-    if (newTicker && !tickers.includes(newTicker.toUpperCase())) {
-      setTickers([...tickers, newTicker.toUpperCase()])
+    // FAILSAFE: Trim whitespace to prevent empty or space-only tickers
+    const cleanTicker = newTicker.trim().toUpperCase();
+    if (cleanTicker && !tickers.includes(cleanTicker)) {
+      setTickers([...tickers, cleanTicker])
       setNewTicker('')
     }
   }
@@ -135,6 +137,11 @@ export default function PortfolioView() {
         })
       }
 
+      // FAILSAFE: Ensure response data structure is valid before mapping
+      if (!response.data || !Array.isArray(response.data.portfolio_data)) {
+          throw new Error("Invalid data received from server");
+      }
+
       // --- ROBUST DATA NORMALIZATION ---
       const normalizedData = response.data.portfolio_data.map(row => ({
         ...row,
@@ -146,7 +153,8 @@ export default function PortfolioView() {
 
       setPortfolioData(normalizedData);
       setMetrics(response.data.metrics)
-      setIndividualAssets(response.data.individual_assets)
+      // FAILSAFE: Default to empty object if missing
+      setIndividualAssets(response.data.individual_assets || {}) 
       setHasRealSimulation(false)
       setLastUpdated(new Date().toLocaleTimeString())
       
@@ -158,7 +166,9 @@ export default function PortfolioView() {
 
     } catch (error) {
       console.error('Error:', error)
-      alert('CONNECTION ERROR')
+      // Display slightly more info if available, otherwise generic error
+      const msg = error.response?.data?.detail || 'CONNECTION ERROR';
+      alert(msg);
     } finally {
         setIsFetching(false);
     }
@@ -170,9 +180,13 @@ export default function PortfolioView() {
     
     return portfolioData.map((row, i) => {
       const merged = { ...row };
-      Object.keys(individualAssets).forEach(ticker => {
-        merged[ticker] = individualAssets[ticker]?.[i] ?? null;
-      });
+      // FAILSAFE: Check if individualAssets exists
+      if (individualAssets) {
+          Object.keys(individualAssets).forEach(ticker => {
+            // FAILSAFE: Optional chaining + nullish coalescing to prevent undefined errors
+            merged[ticker] = individualAssets[ticker]?.[i] ?? null;
+          });
+      }
       return merged;
     });
   }, [portfolioData, individualAssets]);
@@ -208,6 +222,12 @@ export default function PortfolioView() {
       const simulationPeriodData = portfolioData.slice(startIndex);
       const initialCumulative = simulationPeriodData[0].Portfolio_Cumulative || simulationPeriodData[0].Cumulative_Portfolio;
       const finalCumulative = simulationPeriodData[simulationPeriodData.length - 1].Portfolio_Cumulative || simulationPeriodData[simulationPeriodData.length - 1].Cumulative_Portfolio;
+
+      // FAILSAFE: Prevent Division by Zero or NaN results if data is corrupt/missing at start date
+      if (!initialCumulative || initialCumulative === 0) {
+          alert("Cannot calculate P&L: Initial portfolio value is invalid (0 or null) for this date.");
+          return;
+      }
 
       const amount = parseFloat(initialAmount);
       const finalValue = (finalCumulative / initialCumulative) * amount;
@@ -445,8 +465,11 @@ export default function PortfolioView() {
                             onChange={(e) => {
                                 const strat = e.target.value;
                                 let defaultParams = {};
+                                // Set default params based on strategy
                                 if (strat === 'sma') defaultParams = { short_window: 20, long_window: 50 };
                                 else if (strat === 'mean_reversion') defaultParams = { window: 20, threshold: 2.0 };
+                                // ML_RandomForest defaults
+                                
                                 handleStrategyChange(ticker, strat, defaultParams);
                             }}
                             style={{ 
@@ -554,7 +577,7 @@ export default function PortfolioView() {
                             {Object.keys(individualAssets).map((ticker, i) => (
                                 <div key={ticker} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                     <svg width="12" height="2" style={{ marginRight: 0 }}>
-                                        <line x1="0" y1="1" x2="12" y2="1" stroke={['#ff8c00', '#00ff88', '#00d4ff', '#ff4444', '#a855f7', '#ffff00', '#0059ffff', '#ec4899'][i%5]} strokeWidth="1" strokeDasharray="3 2" />
+                                        <line x1="0" y1="1" x2="12" y2="1" stroke={['#ff8c00', '#00ff88', '#00d4ff', '#ff4444', '#a855f7', '#ffff00', '#0059ffff', '#ec4899'][i%8]} strokeWidth="1" strokeDasharray="3 2" />
                                     </svg>
                                     {ticker}
                                 </div>
@@ -590,7 +613,7 @@ export default function PortfolioView() {
                                 type="monotone" 
                                 dataKey={ticker} 
                                 name={ticker} 
-                                stroke={['#ff8c00', '#00ff88', '#00d4ff', '#ff4444', '#a855f7', '#ffff00', '#0059ffff', '#ec4899'][i%5]} 
+                                stroke={['#ff8c00', '#00ff88', '#00d4ff', '#ff4444', '#a855f7', '#ffff00', '#0059ffff', '#ec4899'][i%8]} // Extended color palette
                                 strokeWidth={1} 
                                 dot={false} 
                                 strokeDasharray="5 5"
@@ -614,7 +637,7 @@ export default function PortfolioView() {
         </>
       )}
 
-{/* 6. REALITY SIMULATION */}
+      {/* 6. REALITY SIMULATION */}
       {portfolioData.length > 0 && (
         <div className="bloomberg-panel" style={{ 
             padding: '25px 30px', 
@@ -637,7 +660,7 @@ export default function PortfolioView() {
                     type="date" 
                     value={startDate} 
                     onChange={(e) => setStartDate(e.target.value)}
-                    // FIX 1: Auto-correct date on blur (when user clicks away)
+                    // FIX: Auto-correct date on blur
                     onBlur={() => {
                         if (startDate && startDate < availableDates.min) {
                             alert(`Date too early. Resetting to start of backtest: ${availableDates.min}`);
@@ -653,7 +676,7 @@ export default function PortfolioView() {
                 <input type="number" placeholder="INITIAL CAPITAL (€)" value={initialAmount} onChange={(e) => setInitialAmount(e.target.value)} style={{ width: '200px' }} />
                 
                 <button onClick={() => {
-                    // FIX 2: Hard stop before calculation
+                    // FIX: Hard stop before calculation
                     if (new Date(startDate) < new Date(availableDates.min)) {
                         alert(`Please select a date after ${availableDates.min}`);
                         setStartDate(availableDates.min);
@@ -689,7 +712,7 @@ export default function PortfolioView() {
                     <div style={{ height: '20px', width: '1px', background: 'var(--color-success)', opacity: 0.3 }}></div>
                     <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>P&L</div>
-                        <div style={{ fontSize: '20px', color: metrics["Total P&L"].includes('-') ? 'var(--color-danger)' : 'var(--color-success)', fontWeight: '900', fontSize: '20px' }}>
+                        <div style={{ fontSize: '20px', color: metrics["Total P&L"].includes('-') ? 'var(--color-danger)' : 'var(--color-success)', fontWeight: '900' }}>
                         {metrics["Total P&L"]}
                         </div>
                     </div>
