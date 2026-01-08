@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import LiveBadge from './components/LiveBadge'
 import StrategyMetricCard from './components/StrategyMetricCard'
 
 export default function PortfolioView() {
-  const [tickers, setTickers] = useState(['AAPL', 'MSFT', 'GOOGL'])
+  const [tickers, setTickers] = useState(['AAPL', 'MSFT', 'GOOGL', 'TSLA', 'AMZN', 'JPM'])
   const [newTicker, setNewTicker] = useState('')
   const [portfolioData, setPortfolioData] = useState([])
   const [individualAssets, setIndividualAssets] = useState({})
@@ -44,8 +44,10 @@ export default function PortfolioView() {
   }, [tickers])
 
   const addTicker = () => {
-    if (newTicker && !tickers.includes(newTicker.toUpperCase())) {
-      setTickers([...tickers, newTicker.toUpperCase()])
+    // FAILSAFE: Trim whitespace to prevent empty or space-only tickers
+    const cleanTicker = newTicker.trim().toUpperCase();
+    if (cleanTicker && !tickers.includes(cleanTicker)) {
+      setTickers([...tickers, cleanTicker])
       setNewTicker('')
     }
   }
@@ -135,7 +137,12 @@ export default function PortfolioView() {
         })
       }
 
-      // --- ROBUST DATA NORMALIZATION (CRITICAL FIX) ---
+      // FAILSAFE: Ensure response data structure is valid before mapping
+      if (!response.data || !Array.isArray(response.data.portfolio_data)) {
+          throw new Error("Invalid data received from server");
+      }
+
+      // --- ROBUST DATA NORMALIZATION ---
       const normalizedData = response.data.portfolio_data.map(row => ({
         ...row,
         Portfolio_Cumulative:
@@ -146,34 +153,52 @@ export default function PortfolioView() {
 
       setPortfolioData(normalizedData);
       setMetrics(response.data.metrics)
-      setIndividualAssets(response.data.individual_assets)
+      // FAILSAFE: Default to empty object if missing
+      setIndividualAssets(response.data.individual_assets || {}) 
       setHasRealSimulation(false)
       setLastUpdated(new Date().toLocaleTimeString())
+      
+      // Reset PnL Date
+      setStartDate('');
       
       // Force Re-render
       setChartKey(prev => prev + 1)
 
     } catch (error) {
       console.error('Error:', error)
-      alert('CONNECTION ERROR')
+      // Display slightly more info if available, otherwise generic error
+      const msg = error.response?.data?.detail || 'CONNECTION ERROR';
+      alert(msg);
     } finally {
         setIsFetching(false);
     }
   }
 
-  // --- CHART DATA PRE-CALCULATION (CRITICAL FIX) ---
+  // --- CHART DATA PRE-CALCULATION ---
   const chartData = useMemo(() => {
     if (!portfolioData || portfolioData.length === 0) return [];
     
     return portfolioData.map((row, i) => {
       const merged = { ...row };
-      Object.keys(individualAssets).forEach(ticker => {
-        // Safely access index i, default to null if missing
-        merged[ticker] = individualAssets[ticker]?.[i] ?? null;
-      });
+      // FAILSAFE: Check if individualAssets exists
+      if (individualAssets) {
+          Object.keys(individualAssets).forEach(ticker => {
+            // FAILSAFE: Optional chaining + nullish coalescing to prevent undefined errors
+            merged[ticker] = individualAssets[ticker]?.[i] ?? null;
+          });
+      }
       return merged;
     });
   }, [portfolioData, individualAssets]);
+
+  // --- DATE LIMITS ---
+  const availableDates = useMemo(() => {
+    if (!portfolioData || portfolioData.length === 0) return { min: '', max: '' };
+    return {
+        min: portfolioData[0].Date,
+        max: portfolioData[portfolioData.length - 1].Date
+    };
+  }, [portfolioData]);
 
   const simulatePnL = () => {
     if (!startDate || !initialAmount || parseFloat(initialAmount) <= 0) {
@@ -190,13 +215,19 @@ export default function PortfolioView() {
       const startIndex = portfolioData.findIndex(row => new Date(row.Date) >= targetDate);
 
       if (startIndex === -1) {
-        alert('THE SELECTED START DATE IS OUTSIDE THE BACKTEST RANGE');
+        alert('SELECTED DATE IS OUT OF RANGE');
         return;
       }
 
       const simulationPeriodData = portfolioData.slice(startIndex);
       const initialCumulative = simulationPeriodData[0].Portfolio_Cumulative || simulationPeriodData[0].Cumulative_Portfolio;
       const finalCumulative = simulationPeriodData[simulationPeriodData.length - 1].Portfolio_Cumulative || simulationPeriodData[simulationPeriodData.length - 1].Cumulative_Portfolio;
+
+      // FAILSAFE: Prevent Division by Zero or NaN results if data is corrupt/missing at start date
+      if (!initialCumulative || initialCumulative === 0) {
+          alert("Cannot calculate P&L: Initial portfolio value is invalid (0 or null) for this date.");
+          return;
+      }
 
       const amount = parseFloat(initialAmount);
       const finalValue = (finalCumulative / initialCumulative) * amount;
@@ -434,8 +465,11 @@ export default function PortfolioView() {
                             onChange={(e) => {
                                 const strat = e.target.value;
                                 let defaultParams = {};
+                                // Set default params based on strategy
                                 if (strat === 'sma') defaultParams = { short_window: 20, long_window: 50 };
                                 else if (strat === 'mean_reversion') defaultParams = { window: 20, threshold: 2.0 };
+                                // ML_RandomForest defaults
+                                
                                 handleStrategyChange(ticker, strat, defaultParams);
                             }}
                             style={{ 
@@ -543,7 +577,7 @@ export default function PortfolioView() {
                             {Object.keys(individualAssets).map((ticker, i) => (
                                 <div key={ticker} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                     <svg width="12" height="2" style={{ marginRight: 0 }}>
-                                        <line x1="0" y1="1" x2="12" y2="1" stroke={['#00d4ff','#00ff88','#fbbf24', '#ec4899', '#a855f7','#ff8c00', '#ff4444', '#0059ffff'][i%5]} strokeWidth="1" strokeDasharray="3 2" />
+                                        <line x1="0" y1="1" x2="12" y2="1" stroke={['#ff8c00', '#00ff88', '#00d4ff', '#ff4444', '#a855f7', '#ffff00', '#0059ffff', '#ec4899'][i%8]} strokeWidth="1" strokeDasharray="3 2" />
                                     </svg>
                                     {ticker}
                                 </div>
@@ -579,10 +613,10 @@ export default function PortfolioView() {
                                 type="monotone" 
                                 dataKey={ticker} 
                                 name={ticker} 
-                                stroke={['#00d4ff','#00ff88','#fbbf24', '#ec4899', '#a855f7','#ff8c00', '#ff4444', '#0059ffff'][i%5]} 
+                                stroke={['#ff8c00', '#00ff88', '#00d4ff', '#ff4444', '#a855f7', '#ffff00', '#0059ffff', '#ec4899'][i%8]} // Extended color palette
                                 strokeWidth={1} 
                                 dot={false} 
-                                strokeDasharray="3 2"
+                                strokeDasharray="5 5"
                                 connectNulls={true} 
                                 isAnimationActive={true}
                                 animationDuration={1500}
@@ -605,40 +639,88 @@ export default function PortfolioView() {
 
       {/* 6. REALITY SIMULATION */}
       {portfolioData.length > 0 && (
-        <div className="bloomberg-panel" style={{ padding: '30px', background: 'linear-gradient(180deg, rgba(20,20,20,1) 0%, rgba(10,10,10,1) 100%)', borderTop: '3px solid var(--color-success)', border: '1px solid #333' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: '900', color: 'var(--color-success)', marginBottom: '25px', letterSpacing: '2px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="bloomberg-panel" style={{ 
+            padding: '25px 30px', 
+            background: 'linear-gradient(180deg, rgba(20,20,20,1) 0%, rgba(10,10,10,1) 100%)', 
+            borderTop: '3px solid var(--color-success)', 
+            border: '1px solid #333',
+            height: '150px', 
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center'
+        }}>
+          <h3 style={{ fontSize: '14px', fontWeight: '900', color: 'var(--color-success)', marginBottom: '20px', letterSpacing: '2px', display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0 }}>
             P&L SIMULATION
           </h3>
           
-          <div className="controls" style={{ background: 'transparent', border: 'none', padding: 0 }}>
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ width: '200px' }} />
-            <input type="number" placeholder="INITIAL CAPITAL (€)" value={initialAmount} onChange={(e) => setInitialAmount(e.target.value)} style={{ width: '200px' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '50px' }}>
+            {/* INPUTS */}
+            <div className="controls" style={{ background: 'transparent', border: 'none', padding: 0, margin: 0 }}>
+                <input 
+                    type="date" 
+                    value={startDate} 
+                    onChange={(e) => setStartDate(e.target.value)}
+                    // FIX: Auto-correct date on blur
+                    onBlur={() => {
+                        if (startDate && startDate < availableDates.min) {
+                            alert(`Date too early. Resetting to start of backtest: ${availableDates.min}`);
+                            setStartDate(availableDates.min);
+                        } else if (startDate && startDate > availableDates.max) {
+                            setStartDate(availableDates.max);
+                        }
+                    }}
+                    min={availableDates.min} 
+                    max={availableDates.max}
+                    style={{ width: '200px' }} 
+                />
+                <input type="number" placeholder="INITIAL CAPITAL (€)" value={initialAmount} onChange={(e) => setInitialAmount(e.target.value)} style={{ width: '200px' }} />
+                
+                <button onClick={() => {
+                    // FIX: Hard stop before calculation
+                    if (new Date(startDate) < new Date(availableDates.min)) {
+                        alert(`Please select a date after ${availableDates.min}`);
+                        setStartDate(availableDates.min);
+                        return;
+                    }
+                    simulatePnL();
+                }} style={{ background: 'var(--color-success)', color: 'black', fontWeight: 'bold' }}>
+                SIMULATE
+                </button>
+            </div>
             
-            <button onClick={simulatePnL} style={{ background: 'var(--color-success)', color: 'black', fontWeight: 'bold' }}>
-              SIMULATE
-            </button>
-          </div>
-            
-          {hasRealSimulation && (
-               <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginTop: '20px', background: 'var(--bg-surface)', padding: '15px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
-                  <div>
-                    <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>INVESTED</div>
-                    <div style={{ color: '#00d4ff', fontWeight: 'bold' }}>{metrics["Initial Investment"]}</div>
-                  </div>
-                  <div style={{ color: 'var(--text-muted)' }}>➜</div>
-                  <div>
-                    <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>FINAL</div>
-                    <div style={{ color: '#eee', fontWeight: 'bold' }}>{metrics["Final Value"]}</div>
-                  </div>
-                  <div style={{ height: '20px', width: '1px', background: 'var(--border-color)' }}></div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>P&L</div>
-                    <div style={{ color: metrics["Total P&L"].includes('-') ? 'var(--color-danger)' : 'var(--color-success)', fontWeight: '900', fontSize: '18px' }}>
-                      {metrics["Total P&L"]}
+            {/* RESULTS */}
+            {hasRealSimulation ? (
+                <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '20px', 
+                    background: 'rgba(0, 255, 136, 0.05)', 
+                    padding: '10px 20px', 
+                    borderRadius: '4px', 
+                    border: '1px solid var(--color-success)',
+                    boxShadow: '0 0 15px rgba(0, 255, 136, 0.1)' 
+                }}>
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>INVESTED</div>
+                        <div style={{ fontSize: '20px', color: '#00d4ff', fontWeight: 'bold' }}>{metrics["Initial Investment"]}</div>
                     </div>
-                  </div>
-               </div>
+                    <div style={{ color: 'var(--text-muted)' }}>➜</div>
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>FINAL</div>
+                        <div style={{ fontSize: '20px', color: '#eee', fontWeight: 'bold' }}>{metrics["Final Value"]}</div>
+                    </div>
+                    <div style={{ height: '20px', width: '1px', background: 'var(--color-success)', opacity: 0.3 }}></div>
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>P&L</div>
+                        <div style={{ fontSize: '20px', color: metrics["Total P&L"].includes('-') ? 'var(--color-danger)' : 'var(--color-success)', fontWeight: '900' }}>
+                        {metrics["Total P&L"]}
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <div style={{ height: '42px' }}></div> 
             )}
+          </div>
         </div>
       )}
 
