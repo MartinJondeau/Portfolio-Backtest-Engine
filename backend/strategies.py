@@ -14,7 +14,6 @@ def calculate_rsi(series, period=14):
 # --- STRATEGIES ---
 
 def apply_sma_strategy(df, short_window=20, long_window=50):
-    # (Unchanged)
     data = df.copy()
     data = data[data["Close"] > 0] 
     data["SMA_Short"] = data["Close"].rolling(window=short_window).mean()
@@ -30,7 +29,6 @@ def apply_sma_strategy(df, short_window=20, long_window=50):
     return data
 
 def apply_mean_reversion_strategy(df, window=20, threshold=2.0):
-    # (Unchanged)
     data = df.copy()
     data["Moving_Avg"] = data["Close"].rolling(window=window).mean()
     data["Std_Dev"] = data["Close"].rolling(window=window).std()
@@ -48,7 +46,9 @@ def apply_mean_reversion_strategy(df, window=20, threshold=2.0):
 
 def apply_ml_strategy(df, use_hybrid=False):
     """
-    Random Forest Trend Follower (Alignment Fixed)
+    Random Forest Trend Follower
+    - Hybrid Mode: Full history (Train=Buy&Hold, Test=AI). Normalized to start of history.
+    - Strict Mode: Test history only (Out-of-Sample). Normalized to start of test period.
     """
     # 1. CAPTURE ORIGINAL INDEX
     original_index = df.index
@@ -62,15 +62,12 @@ def apply_ml_strategy(df, use_hybrid=False):
     data["SMA_20"] = data["Close"].rolling(20).mean()
     data["Dist_SMA"] = (data["Close"] - data["SMA_20"]) / data["SMA_20"]
 
-    # Drop NaNs for features, BUT separate X/y first so we don't lose the last row
     feature_cols = ["RSI", "Return_1d", "Return_5d", "Vol_20", "Dist_SMA"]
     
-    # We only drop rows that are missing FEATURES (the first 20 days)
-    # This preserves the last row (today) which has features but no future target
+    # Only drop rows missing features (first 20 days), preserving the last row
     data_clean = data.dropna(subset=feature_cols).copy()
 
     if len(data_clean) < 50:
-        # Fallback if data is too short
         return pd.DataFrame(index=original_index, data={"Strategy_Return": 0.0})
 
     X = data_clean[feature_cols]
@@ -92,43 +89,71 @@ def apply_ml_strategy(df, use_hybrid=False):
     model = RandomForestClassifier(n_estimators=100, min_samples_leaf=5, random_state=42)
     model.fit(X_train, y_train)
 
-    # 5. Generate Signals
+    # 5. Generate Signals & Calculate Returns based on Mode
+    
     if use_hybrid:
-        # Hybrid Mode: Train = 1 (Buy & Hold), Test = Model
-        signals_train = pd.Series(1, index=X_train.index)
+        # --- HYBRID MODE (PORTFOLIO VIEW) ---
+        # Logic: Combine Train (Buy&Hold) + Test (AI) and map to FULL original timeline.
         
-        # Predict on everything after split (including Today)
+        signals_train = pd.Series(1, index=X_train.index)
         X_test_all = X.iloc[split_idx:]
         preds_test = pd.Series(model.predict(X_test_all), index=X_test_all.index)
         
         full_signals = pd.concat([signals_train, preds_test])
+        
+        # Shift(1) for Position
+        aligned_signals = full_signals.shift(1)
+        
+        # Reindex to ORIGINAL DF to fill gaps at start (Train) and align dates
+        final_signals = aligned_signals.reindex(original_index).fillna(1) # Default to 1 (Buy&Hold)
+        
+        final_df = pd.DataFrame(index=original_index)
+        final_df["Market_Return"] = df["Close"].pct_change().fillna(0)
+        final_df["Signal"] = final_signals
+        final_df["Strategy_Return"] = final_df["Signal"] * final_df["Market_Return"]
+        
+        # Normalize from start of history
+        final_df["Cumulative_Market"] = (1 + final_df["Market_Return"]).cumprod()
+        final_df["Cumulative_Strategy"] = (1 + final_df["Strategy_Return"]).cumprod()
+        
+        return final_df
+
     else:
-        # Strict Mode: Test Only
+        # --- STRICT MODE (STRATEGY VIEW) ---
+        # Logic: Slice to Test Period only. Normalize start to 1.0.
+        
         X_test_all = X.iloc[split_idx:]
-        full_signals = pd.Series(model.predict(X_test_all), index=X_test_all.index)
+        
+        # Predict
+        preds_test = pd.Series(model.predict(X_test_all), index=X_test_all.index)
+        
+        # Slice original data to match Test Period
+        test_df = data.loc[X_test_all.index].copy()
+        test_df["Signal"] = preds_test
+        
+        # Calculate Returns
+        # Shift(1): Signal T -> Position T+1
+        test_df["Position"] = test_df["Signal"].shift(1)
+        test_df.dropna(subset=["Position"], inplace=True) # Drop the first NaN from shift
+        
+        test_df["Market_Return"] = test_df["Close"].pct_change().fillna(0)
+        test_df["Strategy_Return"] = test_df["Position"] * test_df["Market_Return"]
+        
+        # Normalize Cumulative Returns to start at 1.0 for the chart
+        # We calculate cumprod, then divide by the first valid value to reset base
+        test_df["Cumulative_Market"] = (1 + test_df["Market_Return"]).cumprod()
+        test_df["Cumulative_Strategy"] = (1 + test_df["Strategy_Return"]).cumprod()
+        
+        if not test_df.empty:
+            base_market = test_df["Cumulative_Market"].iloc[0]
+            base_strategy = test_df["Cumulative_Strategy"].iloc[0]
+            
+            if base_market != 0:
+                test_df["Cumulative_Market"] = test_df["Cumulative_Market"] / base_market
+            if base_strategy != 0:
+                test_df["Cumulative_Strategy"] = test_df["Cumulative_Strategy"] / base_strategy
 
-    # 6. Align Signals (Shift 1 to apply to Returns)
-    # Signal T -> Position T+1
-    # This alignment is currently on the 'data_clean' index (shortened)
-    aligned_signals = full_signals.shift(1)
-
-    # 7. CRITICAL FIX: Re-index to ORIGINAL DF to restore full timeline
-    # Fill Start Gaps (Training period missing features) -> 1 (Buy/Hold) if Hybrid
-    # Fill End Gaps (Shouldn't exist now, but safe to fill with prev value)
-    fill_val = 1 if use_hybrid else 0
-    final_signals = aligned_signals.reindex(original_index).fillna(fill_val)
-
-    # 8. Calculate Returns on the FULL original timeline
-    final_df = pd.DataFrame(index=original_index)
-    final_df["Market_Return"] = df["Close"].pct_change().fillna(0)
-    final_df["Signal"] = final_signals
-    final_df["Strategy_Return"] = final_df["Signal"] * final_df["Market_Return"]
-
-    # 9. Normalize
-    final_df["Cumulative_Market"] = (1 + final_df["Market_Return"]).cumprod()
-    final_df["Cumulative_Strategy"] = (1 + final_df["Strategy_Return"]).cumprod()
-
-    return final_df
+        return test_df
 
 def predict_future_prices(df, days=21):
     # (Unchanged)
