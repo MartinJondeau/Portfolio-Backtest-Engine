@@ -496,7 +496,7 @@ export default function PortfolioView() {
                         <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
                         <XAxis dataKey="Date" stroke="var(--text-muted)" tick={{fontSize: 10}} minTickGap={40} />
                         <YAxis stroke="var(--text-muted)" domain={['auto', 'auto']} tick={{fontSize: 10}} />
-                        <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #333' }} itemStyle={{ fontSize: '12px' }} />
+                        <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #333' }} itemStyle={{ fontSize: '12px' }} formatter={(value) => typeof value === 'number' ? value.toFixed(5) : value} />
                         <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                         
                         <Line type="monotone" dataKey="Portfolio_Cumulative" name="PORTFOLIO" stroke="var(--text-main)" strokeWidth={2} dot={false} />

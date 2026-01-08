@@ -1,0 +1,46 @@
+{
+    "date": "2026-01-08",
+    "timestamp": "11:22:25",
+    "assets": [
+        {
+            "Ticker": "AAPL",
+            "Price Open": 263.2,
+            "Price Close": 260.33,
+            "Change (%)": -1.09,
+            "Volatility (Ann.)": 32.54,
+            "Max Drawdown": -30.22
+        },
+        {
+            "Ticker": "NVDA",
+            "Price Open": 188.57,
+            "Price Close": 189.11,
+            "Change (%)": 0.29,
+            "Volatility (Ann.)": 48.94,
+            "Max Drawdown": -35.93
+        },
+        {
+            "Ticker": "MSFT",
+            "Price Open": 479.76,
+            "Price Close": 483.47,
+            "Change (%)": 0.77,
+            "Volatility (Ann.)": 24.37,
+            "Max Drawdown": -20.56
+        },
+        {
+            "Ticker": "TSLA",
+            "Price Open": 435.9,
+            "Price Close": 431.41,
+            "Change (%)": -1.03,
+            "Volatility (Ann.)": 62.92,
+            "Max Drawdown": -48.19
+        },
+        {
+            "Ticker": "BTC-USD",
+            "Price Open": 91280.7,
+            "Price Close": 89908.02,
+            "Change (%)": -1.5,
+            "Volatility (Ann.)": 34.51,
+            "Max Drawdown": -32.15
+        }
+    ]
+}

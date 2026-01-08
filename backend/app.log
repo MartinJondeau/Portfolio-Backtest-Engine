@@ -245,3 +245,117 @@ ValueError: Cannot set a DataFrame with multiple columns to the single column BT
 2026-01-07 23:35:01,944 [INFO] Successfully fetched 128 rows for STEP
 2026-01-07 23:38:54,887 [INFO] Fetching AAPL (Attempt 1/3)
 2026-01-07 23:38:55,082 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 11:21:09,514 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 11:21:10,993 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 11:21:11,559 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 11:21:11,805 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 11:21:22,912 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 11:21:23,167 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-08 11:21:23,168 [INFO] Fetching MSFT (Attempt 1/3)
+2026-01-08 11:21:23,383 [INFO] Successfully fetched 502 rows for MSFT
+2026-01-08 11:21:23,385 [INFO] Fetching GOOGL (Attempt 1/3)
+2026-01-08 11:21:23,599 [INFO] Successfully fetched 502 rows for GOOGL
+2026-01-08 11:41:41,023 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 11:41:41,874 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 11:41:42,215 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 11:41:42,707 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 11:42:54,452 [INFO] Fetching GOOGL (Attempt 1/3)
+2026-01-08 11:42:54,638 [INFO] Successfully fetched 250 rows for GOOGL
+2026-01-08 11:43:06,145 [INFO] Fetching GOOGL (Attempt 1/3)
+2026-01-08 11:43:06,337 [INFO] Successfully fetched 502 rows for GOOGL
+2026-01-08 11:43:11,539 [INFO] Fetching GOOGL (Attempt 1/3)
+2026-01-08 11:43:11,742 [INFO] Successfully fetched 1255 rows for GOOGL
+2026-01-08 11:44:33,992 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 11:44:34,276 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-08 11:44:34,277 [INFO] Fetching MSFT (Attempt 1/3)
+2026-01-08 11:44:34,456 [INFO] Successfully fetched 502 rows for MSFT
+2026-01-08 11:44:34,457 [INFO] Fetching GOOGL (Attempt 1/3)
+2026-01-08 11:44:34,612 [INFO] Successfully fetched 502 rows for GOOGL
+2026-01-08 11:45:56,147 [INFO] Fetching GOOGL (Attempt 1/3)
+2026-01-08 11:45:56,347 [INFO] Successfully fetched 1255 rows for GOOGL
+2026-01-08 11:46:00,515 [INFO] Fetching GOOGL (Attempt 1/3)
+2026-01-08 11:46:00,787 [INFO] Successfully fetched 1255 rows for GOOGL
+2026-01-08 11:46:01,133 [INFO] Fetching GOOGL (Attempt 1/3)
+2026-01-08 11:46:01,297 [INFO] Successfully fetched 1255 rows for GOOGL
+2026-01-08 11:49:35,637 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 11:49:35,865 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-08 11:49:35,865 [INFO] Fetching MSFT (Attempt 1/3)
+2026-01-08 11:49:36,073 [INFO] Successfully fetched 502 rows for MSFT
+2026-01-08 11:49:36,074 [INFO] Fetching GOOGL (Attempt 1/3)
+2026-01-08 11:49:36,246 [INFO] Successfully fetched 502 rows for GOOGL
+2026-01-08 11:51:02,643 [INFO] Fetching GOOGL (Attempt 1/3)
+2026-01-08 11:51:02,862 [INFO] Successfully fetched 1255 rows for GOOGL
+2026-01-08 11:51:03,574 [INFO] Fetching GOOGL (Attempt 1/3)
+2026-01-08 11:51:03,825 [INFO] Successfully fetched 1255 rows for GOOGL
+2026-01-08 11:54:18,120 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 11:54:18,364 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 11:54:18,458 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 11:54:18,648 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 11:54:19,819 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 11:54:20,063 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 11:54:20,087 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 11:54:20,223 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 11:55:37,706 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 11:55:37,932 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 11:55:38,073 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 11:55:38,333 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 11:59:04,209 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 11:59:04,567 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 11:59:04,824 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 11:59:05,087 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 11:59:08,627 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 11:59:08,774 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 12:00:42,589 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:00:43,088 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 12:00:43,505 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:00:43,925 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 12:00:51,473 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:00:51,604 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 12:00:57,958 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:00:58,210 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 12:00:58,475 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:00:58,658 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 12:04:03,103 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:04:03,339 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-08 12:04:03,339 [INFO] Fetching MSFT (Attempt 1/3)
+2026-01-08 12:04:03,534 [INFO] Successfully fetched 502 rows for MSFT
+2026-01-08 12:04:03,535 [INFO] Fetching GOOGL (Attempt 1/3)
+2026-01-08 12:04:03,702 [INFO] Successfully fetched 502 rows for GOOGL
+2026-01-08 12:05:59,480 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:05:59,671 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 12:05:59,822 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:06:00,019 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 12:09:04,673 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:09:05,200 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-08 12:09:05,201 [INFO] Fetching MSFT (Attempt 1/3)
+2026-01-08 12:09:05,417 [INFO] Successfully fetched 502 rows for MSFT
+2026-01-08 12:09:05,418 [INFO] Fetching GOOGL (Attempt 1/3)
+2026-01-08 12:09:05,562 [INFO] Successfully fetched 502 rows for GOOGL
+2026-01-08 12:14:05,746 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:14:05,995 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-08 12:14:05,997 [INFO] Fetching MSFT (Attempt 1/3)
+2026-01-08 12:14:06,198 [INFO] Successfully fetched 502 rows for MSFT
+2026-01-08 12:14:06,199 [INFO] Fetching GOOGL (Attempt 1/3)
+2026-01-08 12:14:06,369 [INFO] Successfully fetched 502 rows for GOOGL
+2026-01-08 12:14:57,376 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:14:57,594 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 12:14:57,795 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:14:57,969 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 12:19:06,641 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:19:06,883 [INFO] Successfully fetched 502 rows for AAPL
+2026-01-08 12:19:06,885 [INFO] Fetching MSFT (Attempt 1/3)
+2026-01-08 12:19:07,105 [INFO] Successfully fetched 502 rows for MSFT
+2026-01-08 12:19:07,107 [INFO] Fetching GOOGL (Attempt 1/3)
+2026-01-08 12:19:07,272 [INFO] Successfully fetched 502 rows for GOOGL
+2026-01-08 12:19:58,634 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:19:58,960 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 12:19:59,314 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:19:59,540 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 12:22:06,913 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:22:07,260 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 12:22:07,532 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:22:07,889 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 12:23:08,607 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:23:08,820 [INFO] Successfully fetched 250 rows for AAPL
+2026-01-08 12:23:09,077 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-08 12:23:09,325 [INFO] Successfully fetched 250 rows for AAPL

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Area } from 'recharts'
+import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Area, ReferenceArea } from 'recharts'
 
 import StrategyMetricCard from './components/StrategyMetricCard'
 import LiveBadge from './components/LiveBadge'
@@ -120,6 +120,7 @@ export default function StrategiesView() {
       }, 300000)
     }
     return () => { if (interval) clearInterval(interval) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAutoRefresh, error, isFetching, ticker, strategy, shortWindow, longWindow, window, threshold, period, timeframe])
 
   const getPlotData = () => {
@@ -131,7 +132,7 @@ export default function StrategiesView() {
 
     const historyMinusLast = data.slice(0, data.length - 1); 
     const lastPoint = data[data.length - 1]; 
-    const baseValue = lastPoint.Cumulative_Strategy; 
+    const baseValue = lastPoint?.Cumulative_Strategy ?? 1; 
     
     const bridgePoint = {
       ...lastPoint, 
@@ -141,12 +142,68 @@ export default function StrategiesView() {
 
     const forecastPlot = forecastData.map(f => ({
        Date: f.Date,
-       Forecast_Mean: f.Forecast_Ratio * baseValue,
-       Forecast_Range: [f.Lower_Ratio * baseValue, f.Upper_Ratio * baseValue]
+       Forecast_Mean: (f.Forecast_Ratio ?? 1) * baseValue,
+       Forecast_Range: [(f.Lower_Ratio ?? 1) * baseValue, (f.Upper_Ratio ?? 1) * baseValue]
     }));
 
     return [...historyMinusLast, bridgePoint, ...forecastPlot];
   }
+
+  const getStrategyDisplayName = () => {
+    if (strategy === 'SMA') return 'SMA CROSSOVER';
+    if (strategy === 'MeanReversion') return 'MEAN REVERSION';
+    if (strategy === 'ML_RandomForest') return 'RANDOM FOREST';
+    return strategy;
+  };
+
+  // Calculate forecast date range for ReferenceArea
+  const getForecastDateRange = () => {
+    if (!showForecast || forecastData.length === 0) {
+      return { start: null, end: null };
+    }
+    return {
+      start: forecastData[0]?.Date || null,
+      end: forecastData[forecastData.length - 1]?.Date || null
+    };
+  };
+
+  const { start: forecastStartDate, end: forecastEndDate } = getForecastDateRange();
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active || !payload || !payload.length) return null;
+
+    return (
+      <div style={{ 
+        backgroundColor: 'rgba(15, 15, 15, 0.95)', 
+        border: '1px solid var(--border-strong)',
+        borderLeft: '3px solid var(--color-primary)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+        borderRadius: '2px',
+        padding: '8px 10px',
+        fontSize: '12px'
+      }}>
+        <div style={{ color: '#888', marginBottom: 6, fontWeight: 'bold' }}>
+          {label}
+        </div>
+        {payload.map((entry, idx) => {
+          // Special handling for Forecast_Range (array)
+          if (entry.dataKey === 'Forecast_Range' && Array.isArray(entry.value)) {
+            return (
+              <div key={`${entry.name}-${idx}`} style={{ color: entry.fill || entry.stroke || '#00ff88', marginBottom: 2 }}>
+                CI 95%: {entry.value[0]?.toFixed(5)} : {entry.value[1]?.toFixed(5)}
+              </div>
+            );
+          }
+          // Regular numeric values
+          return (
+            <div key={`${entry.name}-${idx}`} style={{ color: entry.stroke || entry.fill || '#ccc', marginBottom: 2 }}>
+              {entry.name}: {typeof entry.value === 'number' ? entry.value.toFixed(5) : entry.value}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <div className="view-container">
@@ -229,85 +286,167 @@ export default function StrategiesView() {
             {/* METRICS */}
             {metrics && (
                 <div className="grid-container" style={{ marginBottom: '25px' }}>
-                <StrategyMetricCard title="TOTAL RETURN" value={metrics["Total Return"]} color={metrics["Total Return"].includes("-") ? "#ff4444" : "#00ff88"} />          
+                <StrategyMetricCard title="TOTAL RETURN" value={metrics["Total Return"]} color={metrics["Total Return"]?.includes("-") ? "#ff4444" : "#00ff88"} />          
                 <StrategyMetricCard title="SHARPE RATIO" value={metrics["Sharpe Ratio"]} color="#00d4ff" />
                 <StrategyMetricCard title="VOLATILITY" value={metrics["Volatility"]} color="#ffa500" />
                 <StrategyMetricCard title="MAX DRAWDOWN" value={metrics["Max Drawdown"]} color="#ff4444" />
                 </div>
             )}
 
+
             {/* CHART */}
             {data.length > 0 && (
-                <div className="bloomberg-panel" style={{ padding: '24px', minHeight: '500px' }}>
-                <h3 style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>CUMULATIVE PERFORMANCE {strategy === 'ML_RandomForest' ? '(OUT-OF-SAMPLE)' : ''}</span>
-                    <span style={{ color: 'var(--color-primary)' }}>■ STRATEGY vs ■ MARKET</span>
+              <div className="bloomberg-panel" style={{ padding: 24, minHeight: 500 }}>
+
+                {/* HEADER */}
+                <h3
+                  style={{
+                    fontSize: 12,
+                    color: 'var(--text-muted)',
+                    marginBottom: 12,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <span>
+                    CUMULATIVE PERFORMANCE {strategy === 'ML_RandomForest' ? '(OUT-OF-SAMPLE)' : ''}
+                  </span>
+                  <span style={{ color: 'var(--color-primary)' }}>
+                    STRATEGY vs BENCHMARK
+                  </span>
                 </h3>
-                
+
+                {/* CUSTOM LEGEND */}
+                <div style={{ display: 'flex', gap: 32, marginBottom: 16 }}>
+                  {/* Historical */}
+                  <div style={{ fontSize: 11 }}>
+                    <div style={{ color: 'var(--text-muted)', marginBottom: 6 }}>
+                      HISTORICAL
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ width: 12, height: 2, background: '#00d4ff' }} />
+                      BUY & HOLD
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ width: 12, height: 2, background: '#00ff88' }} />
+                      {getStrategyDisplayName()}
+                    </div>
+                  </div>
+
+                  {/* Forecast */}
+                  {showForecast && forecastData.length > 0 && (
+                    <div style={{ fontSize: 11 }}>
+                      <div style={{ color: 'var(--text-muted)', marginBottom: 6 }}>
+                        AI FORECAST
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span
+                          style={{
+                            width: 12,
+                            height: 12,
+                            background: '#00ff88',
+                            opacity: 0.2,
+                          }}
+                        />
+                        95% CONFIDENCE BAND
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <svg width="12" height="2" style={{ marginRight: 0 }}>
+                          <line x1="0" y1="1" x2="12" y2="1" stroke="#00ff88" strokeWidth="2" strokeDasharray="3 2" />
+                        </svg>
+                        EXPECTED PATH
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* CHART */}
                 <div style={{ width: '100%', height: 450 }}>
-                    <ResponsiveContainer key={chartKey}>
+                  <ResponsiveContainer key={chartKey}>
                     <ComposedChart data={getPlotData()}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="Date" stroke="var(--text-muted)" tick={{fontSize: 10}} minTickGap={40} />
-                        <YAxis stroke="var(--text-muted)" domain={['auto', 'auto']} tick={{fontSize: 10}} />
-                        
-                        <Tooltip 
-                        contentStyle={{ backgroundColor: '#000', border: '1px solid #333' }}
-                        itemStyle={{ color: '#ccc' }}
-                        />
-                        <Legend />
 
-                        <Line 
-                            type="monotone" 
-                            dataKey="Cumulative_Market" 
-                            name="BUY & HOLD" 
-                            stroke="#00d4ff" 
-                            dot={false} 
-                            strokeWidth={1.5} 
-                            isAnimationActive={true} 
-                            animationDuration={1500}
-                        />
-                        <Line 
-                            type="monotone" 
-                            dataKey="Cumulative_Strategy" 
-                            name={`STRATEGY (${strategy})`} 
-                            stroke="#00ff88" 
-                            dot={false} 
-                            strokeWidth={2} 
-                            isAnimationActive={true}
-                            animationDuration={1500}
-                        />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
 
-                        {showForecast && (
+                      <XAxis
+                        dataKey="Date"
+                        stroke="var(--text-muted)"
+                        tick={{ fontSize: 10 }}
+                        minTickGap={40}
+                      />
+
+                      <YAxis
+                        stroke="var(--text-muted)"
+                        tick={{ fontSize: 10 }}
+                        domain={['auto', 'auto']}
+                      />
+
+                      {/* Forecast background */}
+                      {/* Removed - not needed with cone visualization */}
+
+                      {/* Tooltip */}
+                      <Tooltip content={<CustomTooltip />} />
+
+                      {/* Market */}
+                      <Line
+                        type="monotone"
+                        dataKey="Cumulative_Market"
+                        name="BUY & HOLD"
+                        stroke="#00d4ff"
+                        dot={false}
+                        strokeWidth={1.5}
+                        isAnimationActive
+                        animationDuration={1500}
+                      />
+
+                      {/* Strategy */}
+                      <Line
+                        type="monotone"
+                        dataKey="Cumulative_Strategy"
+                        name={getStrategyDisplayName()}
+                        stroke="#00ff88"
+                        dot={false}
+                        strokeWidth={2}
+                        isAnimationActive
+                        animationDuration={1500}
+                      />
+
+                      {/* Forecast */}
+                      {showForecast && forecastData.length > 0 && (
                         <>
-                            <Area 
-                                type="monotone" 
-                                dataKey="Forecast_Range" 
-                                name="95% Confidence" 
-                                stroke="none" 
-                                fill="#00ff88" 
-                                fillOpacity={0.15} 
-                                isAnimationActive={true} 
-                                animationDuration={1500}
-                            />
-                            <Line 
-                                type="monotone" 
-                                dataKey="Forecast_Mean" 
-                                name="AI FORECAST" 
-                                stroke="#00ff88" 
-                                strokeWidth={2} 
-                                dot={false} 
-                                style={{ filter: 'drop-shadow(0px 0px 6px rgba(255, 255, 255, 0.6))' }} 
-                                isAnimationActive={true}
-                                animationDuration={1500}
-                            />
+                          <Area
+                            type="monotone"
+                            dataKey="Forecast_Range"
+                            name="95% Confidence"
+                            stroke="none"
+                            fill="#00ff88"
+                            fillOpacity={0.15}
+                            isAnimationActive
+                            animationDuration={1500}
+                          />
+
+                          <Line
+                            type="monotone"
+                            dataKey="Forecast_Mean"
+                            name="AI FORECAST"
+                            stroke="#00ff88"
+                            strokeDasharray="6 4"
+                            strokeWidth={2}
+                            dot={false}
+                            style={{
+                              filter: 'drop-shadow(0px 0px 6px rgba(255,255,255,0.5))',
+                            }}
+                            isAnimationActive
+                            animationDuration={1500}
+                          />
                         </>
-                        )}
+                      )}
+
                     </ComposedChart>
-                    </ResponsiveContainer>
+                  </ResponsiveContainer>
                 </div>
-                </div>
+              </div>
             )}
+
         </>
       )}
     </div>
