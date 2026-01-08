@@ -224,52 +224,73 @@ export default function StrategiesView() {
       </div>
 
       {/* Controls */}
-      <div className="controls">
-        <select value={strategy} onChange={(e) => setStrategy(e.target.value)} style={{ minWidth: '160px' }}>
-          <option value="SMA">SMA CROSSOVER</option>
-          <option value="MeanReversion">MEAN REVERSION</option>
-          <option value="ML_RandomForest">RANDOM FOREST</option>
-        </select>
+      <div className="controls" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        
+        {/* LEFT SIDE: Strategy & Params */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <select value={strategy} onChange={(e) => setStrategy(e.target.value)} style={{ minWidth: '160px' }}>
+                <option value="SMA">SMA CROSSOVER</option>
+                <option value="MeanReversion">MEAN REVERSION</option>
+                <option value="ML_RandomForest">RANDOM FOREST</option>
+            </select>
 
-        {strategy === 'ML_RandomForest' && (
-           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '10px', marginRight: '10px' }}>
-             <label style={{ color: 'var(--color-primary)', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
-               <input 
-                 type="checkbox" 
-                 checked={showForecast} 
-                 onChange={(e) => setShowForecast(e.target.checked)}
-                 style={{ accentColor: 'var(--color-primary)', marginRight: '8px', cursor: 'pointer' }}
-               />
-               ENABLE AI FORECAST
-             </label>
-           </div>
-        )}
+            {strategy === 'ML_RandomForest' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '10px', marginRight: '10px' }}>
+                <label style={{ color: 'var(--color-primary)', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
+                    <input 
+                    type="checkbox" 
+                    checked={showForecast} 
+                    onChange={(e) => setShowForecast(e.target.checked)}
+                    style={{ accentColor: 'var(--color-primary)', marginRight: '8px', cursor: 'pointer' }}
+                    />
+                    ENABLE AI FORECAST
+                </label>
+                </div>
+            )}
 
-        <input value={ticker} onChange={(e) => setTicker(e.target.value.toUpperCase())} placeholder="TICKER" style={{ width: '100px' }} />
+            {strategy === 'SMA' && (
+                <>
+                <input type="number" value={shortWindow} onChange={(e) => setShortWindow(e.target.value)} placeholder="SHORT" style={{ width: '80px' }} />
+                <input type="number" value={longWindow} onChange={(e) => setLongWindow(e.target.value)} placeholder="LONG" style={{ width: '80px' }} />
+                </>
+            )}
 
-        {strategy === 'SMA' && (
-          <>
-            <input type="number" value={shortWindow} onChange={(e) => setShortWindow(e.target.value)} placeholder="SHORT" style={{ width: '80px' }} />
-            <input type="number" value={longWindow} onChange={(e) => setLongWindow(e.target.value)} placeholder="LONG" style={{ width: '80px' }} />
-          </>
-        )}
+            {strategy === 'MeanReversion' && (
+                <>
+                <input type="number" value={window} onChange={(e) => setWindow(e.target.value)} placeholder="WINDOW" style={{ width: '80px' }} />
+                <input type="number" step="0.1" value={threshold} onChange={(e) => setThreshold(e.target.value)} placeholder="Z-SCORE" style={{ width: '80px' }} />
+                </>
+            )}
+        </div>
 
-        {strategy === 'MeanReversion' && (
-          <>
-            <input type="number" value={window} onChange={(e) => setWindow(e.target.value)} placeholder="WINDOW" style={{ width: '80px' }} />
-            <input type="number" step="0.1" value={threshold} onChange={(e) => setThreshold(e.target.value)} placeholder="Z-SCORE" style={{ width: '80px' }} />
-          </>
-        )}
+{/* RIGHT SIDE: Period, Ticker, Execute */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: 'auto' }}>
+            
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginRight: '10px' }}>
+                {['1y', '2y', '5y'].map(p => (
+                    <button
+                        key={p}
+                        onClick={() => setPeriod(p)}
+                        style={{
+                            background: period === p ? 'var(--color-primary)' : 'transparent',
+                            color: period === p ? '#000' : 'var(--text-muted)',
+                            border: period === p ? 'none' : '1px solid var(--border-strong)',
+                            padding: '6px 12px',
+                            fontSize: '11px'
+                        }}
+                    >
+                        {p.toUpperCase()}
+                    </button>
+                ))}
+            </div>
 
-        <select value={period} onChange={(e) => setPeriod(e.target.value)}>
-          <option value="1y">1 YEAR</option>
-          <option value="2y">2 YEARS</option>
-          <option value="5y">5 YEARS</option>
-        </select>
+            <input value={ticker} onChange={(e) => setTicker(e.target.value.toUpperCase())} placeholder="TICKER" style={{ width: '100px' }} />
 
-        <button onClick={fetchData} disabled={isFetching}>
-            {isFetching ? 'EXECUTING...' : 'EXECUTE'}
-        </button>
+            <button onClick={fetchData} disabled={isFetching}>
+                {isFetching ? 'EXECUTING...' : 'EXECUTE'}
+            </button>
+        </div>
+
       </div>
 
       {/* ERROR STATE */}
