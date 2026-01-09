@@ -1,6 +1,6 @@
 # FOR THE TEACHER (ACTUAL README STARTS BELOW)
 
-To summarize the project (for testing and evaluation purposes only, **not** documentation), we deliberately placed a strong emphasis on **infrastructure and reliability**. While there are clear opportunities to improve code structure and modularity, the primary focus was not on deploying highly sophisticated strategies.
+To summarize the project (for testing and evaluation purposes only, **not** documentation), we deliberately placed a strong emphasis on **infrastructure and reliability**. We do see clear opportunities to improve code structure and modularity and the primary focus was not on deploying highly sophisticated strategies.
 
 That said, the application currently supports testing the following strategies:
 - Buy & Hold  
