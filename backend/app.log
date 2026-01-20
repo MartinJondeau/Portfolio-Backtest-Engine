@@ -1025,3 +1025,13 @@ ValueError: Cannot set a DataFrame with multiple columns to the single column BT
 2026-01-08 17:36:16,471 [INFO] Successfully fetched 503 rows for AMZN
 2026-01-08 17:36:16,471 [INFO] Fetching JPM (Attempt 1/3)
 2026-01-08 17:36:16,681 [INFO] Successfully fetched 503 rows for JPM
+2026-01-20 18:55:12,620 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-20 18:55:13,214 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-20 18:55:13,976 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-20 18:55:14,172 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-20 19:00:14,234 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-20 19:00:14,445 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-20 19:05:15,241 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-20 19:05:15,430 [INFO] Successfully fetched 251 rows for AAPL
+2026-01-20 19:10:15,496 [INFO] Fetching AAPL (Attempt 1/3)
+2026-01-20 19:10:15,674 [INFO] Successfully fetched 251 rows for AAPL

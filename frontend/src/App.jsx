@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import SingleAssetView from './SingleAssetView'
-import StrategiesView from './StrategiesView'
-import PortfolioView from './PortfolioView'
+import OptionsView from './OptionsView'
 import Clock from './components/Clock'
 import './App.css'
 
 function App() {
-  const [activeTab, setActiveTab] = useState('single')
+  // Since there is only one view, we don't strictly need state for tabs,
+  // but keeping the structure allows you to add more "Option" related tabs later (e.g. Vol Surface)
+  const [activeTab, setActiveTab] = useState('options')
 
   return (
     <div className="app-container">
@@ -15,18 +15,19 @@ function App() {
         <div className="brand-section">
           <div className="neon-bar"></div>
           <div>
-            <h1 className="brand-title">HADES PLATFORM INTELLIGENCE</h1>
-            <p className="brand-subtitle">Quantitative Portfolio Analytics</p>
+            <h1 className="brand-title">OPTION PRICING PLATFORM</h1>
+            <p className="brand-subtitle">Quantitative Risk Management</p>
           </div>
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <Clock />
+          {/* You can keep or remove the report button depending on if you want PDF/Excel exports for options */}
           <button 
             className="btn-download"
-            onClick={() => window.open('/api/report/download', '_blank')}
+            onClick={() => alert("Export feature coming soon for Options data")}
           >
-            EXCEL REPORT
+            EXPORT DATA
           </button>
         </div>
       </header>
@@ -34,9 +35,9 @@ function App() {
       {/* --- NAVIGATION --- */}
       <nav className="main-nav">
         {[
-          { id: 'single', label: 'ASSET VIEW' }, 
-          { id: 'strategies', label: 'STRATEGY BACKTEST' },
-          { id: 'portfolio', label: 'PORTFOLIO MANAGEMENT' }
+          { id: 'options', label: 'PRICING & HEDGING' },
+          // You can add more option-specific tabs here later, e.g.:
+          // { id: 'surface', label: 'VOLATILITY SURFACE' }
         ].map(tab => (
           <button
             key={tab.id}
@@ -50,23 +51,14 @@ function App() {
 
       {/* --- MAIN CONTENT --- */}
       <main className="main-content">
-        {/* We use distinct mounts (display: none) to preserve state when switching tabs */}
-        <div style={{ display: activeTab === 'single' ? 'block' : 'none', height: '100%' }}>
-          <SingleAssetView />
-        </div>
-
-        <div style={{ display: activeTab === 'strategies' ? 'block' : 'none', height: '100%' }}>
-          <StrategiesView />
-        </div>
-
-        <div style={{ display: activeTab === 'portfolio' ? 'block' : 'none', height: '100%' }}>
-          <PortfolioView />
+        <div style={{ display: activeTab === 'options' ? 'block' : 'none', height: '100%' }}>
+          <OptionsView />
         </div>
       </main>
 
       {/* --- FOOTER --- */}
       <footer className="app-footer">
-        HADES © 2026 | ADRIEN BAYRE & MARTIN JONDEAU - PORTFOLIO BACKTEST ENGINE
+        ESILV © 2026 | PI² Team 406 - OPTION PRICING ENGINE
       </footer>
     </div>
   )
